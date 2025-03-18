@@ -367,6 +367,7 @@ Get issues for a GitLab project.
 Parameters:
 
 - `project_id`: Project ID or URL-encoded path
+- `iid` (optional): Return the issue with the specified internal ID (number or string)
 - `state` (optional): Filter issues by state ('opened', 'closed', 'all')
 - `labels` (optional): Filter issues by labels (comma-separated string)
 - `milestone` (optional): Filter issues by milestone

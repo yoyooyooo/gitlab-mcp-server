@@ -734,6 +734,7 @@ function formatCommitsResponse(commits: GitLabCommitsResponse) {
 async function listIssues(
   projectId: string,
   options: {
+    iid?: number | string;
     state?: "opened" | "closed" | "all";
     labels?: string;
     milestone?: string;
@@ -751,13 +752,16 @@ async function listIssues(
     per_page?: number;
   } = {}
 ): Promise<GitLabIssuesResponse> {
+  // Extract iid for client-side filtering if provided
+  const { iid, ...apiOptions } = options;
+
   // Construct the URL with the project ID
   const url = new URL(
     `${GITLAB_API_URL}/projects/${encodeURIComponent(projectId)}/issues`
   );
 
-  // Add all query parameters
-  Object.entries(options).forEach(([key, value]) => {
+  // Add all query parameters except iid (we'll filter that client-side)
+  Object.entries(apiOptions).forEach(([key, value]) => {
     if (value !== undefined) {
       url.searchParams.append(key, value.toString());
     }
@@ -777,10 +781,15 @@ async function listIssues(
     }
 
     // Parse the response JSON
-    const issues = await response.json();
+    let issues = await response.json() as any[];
 
-    // Get the total count from the headers
-    const totalCount = parseInt(response.headers.get("X-Total") || "0");
+    // If iid is provided, filter the issues by iid
+    if (iid !== undefined) {
+      issues = issues.filter((issue) => issue.iid.toString() === iid.toString());
+    }
+
+    // Get the total count - if filtered, use the filtered length
+    const totalCount = iid !== undefined ? issues.length : parseInt(response.headers.get("X-Total") || "0");
 
     // Validate and return the response
     return GitLabIssuesResponseSchema.parse({
@@ -833,7 +842,7 @@ function formatIssuesResponse(issues: GitLabIssuesResponse) {
       state: issue.state,
       author: issue.author.name,
       assignees: issue.assignees.map((a) => a.name),
-      labels: issue.labels.map((l) => l.name),
+      labels: issue.labels.map((l) => typeof l === 'string' ? l : l.name),
       milestone: issue.milestone?.title || null,
       created_at: issue.created_at,
       updated_at: issue.updated_at,

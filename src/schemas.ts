@@ -295,7 +295,10 @@ export const GitLabIssueSchema = z.object({
   state: z.string(),
   author: GitLabUserSchema,
   assignees: z.array(GitLabUserSchema),
-  labels: z.array(GitLabLabelSchema),
+  labels: z.union([
+    z.array(GitLabLabelSchema),
+    z.array(z.string())
+  ]),
   milestone: GitLabMilestoneSchema.nullable(),
   created_at: z.string(),
   updated_at: z.string(),
@@ -483,6 +486,10 @@ export const ListCommitsSchema = ProjectParamsSchema.extend({
 
 // Define the input schema for the list_issues tool
 export const ListIssuesSchema = ProjectParamsSchema.extend({
+  iid: z
+    .union([z.number(), z.string()])
+    .optional()
+    .describe("Return the issue with the specified internal ID"),
   state: z
     .enum(["opened", "closed", "all"])
     .optional()
