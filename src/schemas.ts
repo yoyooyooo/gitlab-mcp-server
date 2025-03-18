@@ -292,7 +292,7 @@ export const GitLabIssueSchema = z.object({
   iid: z.number(), // Added to match GitLab API
   project_id: z.number(), // Added to match GitLab API
   title: z.string(),
-  description: z.string(), // Changed from body to match GitLab API
+  description: z.string().nullable(), // Changed to nullable to handle null descriptions
   state: z.string(),
   author: GitLabUserSchema,
   assignees: z.array(GitLabUserSchema),
@@ -319,14 +319,14 @@ export const GitLabMergeRequestSchema = z.object({
   iid: z.number(), // Added to match GitLab API
   project_id: z.number(), // Added to match GitLab API
   title: z.string(),
-  description: z.string(), // Changed from body to match GitLab API
+  description: z.string().nullable(), // Changed to nullable to match GitLab API
   state: z.string(),
   merged: z.boolean().optional(),
   author: GitLabUserSchema,
   assignees: z.array(GitLabUserSchema),
   source_branch: z.string(), // Changed from head to match GitLab API
   target_branch: z.string(), // Changed from base to match GitLab API
-  diff_refs: GitLabMergeRequestDiffRefSchema.optional(),
+  diff_refs: GitLabMergeRequestDiffRefSchema.nullable().optional(), // Made nullable and optional
   web_url: z.string(), // Changed from html_url to match GitLab API
   created_at: z.string(),
   updated_at: z.string(),

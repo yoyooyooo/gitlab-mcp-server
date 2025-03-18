@@ -493,7 +493,7 @@ Response:
 
 ## Conclusion
 
-This enhanced GitLab MCP Server builds upon the original implementation by adding support for group projects listing and comprehensive activity tracking features. These enhancements provide powerful tools for monitoring project activities, tracking code changes, and managing issues and merge requests.
+This enhanced GitLab MCP Server builds upon the original implementation by adding support for group projects listing and comprehensive activity tracking features. These enhancements provide powerful tools for monitoring project activities, tracking code changes, and managing issues and merge requests. The recent bug fixes ensure better compatibility with GitLab's API and improve the reliability of file operations.
 
 ### Use Cases
 

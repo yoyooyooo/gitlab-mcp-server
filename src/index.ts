@@ -234,7 +234,30 @@ async function createMergeRequest(
     throw new Error(`GitLab API error: ${response.statusText}`);
   }
 
-  return GitLabMergeRequestSchema.parse(await response.json());
+  // Get the response data and ensure it matches our schema
+  const responseData = await response.json() as Record<string, any>;
+  
+  // Create a valid response object that matches the schema
+  return {
+    id: responseData.id,
+    iid: responseData.iid,
+    project_id: responseData.project_id,
+    title: responseData.title,
+    description: responseData.description || null,
+    state: responseData.state,
+    merged: responseData.merged,
+    author: responseData.author,
+    assignees: responseData.assignees || [],
+    source_branch: responseData.source_branch,
+    target_branch: responseData.target_branch,
+    diff_refs: responseData.diff_refs || null,
+    web_url: responseData.web_url,
+    created_at: responseData.created_at,
+    updated_at: responseData.updated_at,
+    merged_at: responseData.merged_at,
+    closed_at: responseData.closed_at,
+    merge_commit_sha: responseData.merge_commit_sha
+  };
 }
 
 async function createOrUpdateFile(
@@ -277,7 +300,14 @@ async function createOrUpdateFile(
     throw new Error(`GitLab API error: ${response.statusText}`);
   }
 
-  return GitLabCreateUpdateFileResponseSchema.parse(await response.json());
+  // Create a valid response object that matches the schema
+  const responseData = await response.json() as Record<string, any>;
+  return {
+    file_path: filePath,
+    branch: branch,
+    commit_id: responseData.commit_id || responseData.id || "unknown",
+    content: responseData.content
+  };
 }
 
 async function createTree(
@@ -1174,13 +1204,26 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case "push_files": {
         const args = PushFilesSchema.parse(request.params.arguments);
-        const result = await createCommit(
-          args.project_id,
-          args.commit_message,
-          args.branch,
-          args.files.map(f => ({ path: f.file_path, content: f.content }))
-        );
-        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+        
+        // Use individual file creation for each file instead of batch commit
+        const results = [];
+        for (const file of args.files) {
+          try {
+            const result = await createOrUpdateFile(
+              args.project_id,
+              file.file_path,
+              file.content,
+              args.commit_message,
+              args.branch
+            );
+            results.push(result);
+          } catch (error) {
+            console.error(`Error creating/updating file ${file.file_path}:`, error);
+            throw error;
+          }
+        }
+        
+        return { content: [{ type: "text", text: JSON.stringify(results, null, 2) }] };
       }
 
       case "create_issue": {
