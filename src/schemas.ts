@@ -1,5 +1,66 @@
 import { z } from 'zod';
 
+// Event-related schemas
+export const GitLabEventAuthorSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  username: z.string(),
+  avatar_url: z.string(),
+  email: z.string().optional(),
+  web_url: z.string(),
+});
+
+export const GitLabEventDataSchema = z
+  .object({
+    id: z.number().optional(),
+    iid: z.number().optional(),
+    title: z.string().optional(),
+    description: z.string().optional(),
+    state: z.string().optional(),
+    created_at: z.string().optional(),
+    updated_at: z.string().optional(),
+    action: z.string().optional(),
+    source_branch: z.string().optional(),
+    target_branch: z.string().optional(),
+    commit_title: z.string().optional(),
+    commit_id: z.string().optional(),
+    sha: z.string().optional(),
+    message: z.string().optional(),
+    ref: z.string().optional(),
+    ref_type: z.string().optional(),
+    web_url: z.string().optional(),
+  })
+  .passthrough(); // Allow additional properties as GitLab event data varies by type
+
+export const GitLabEventSchema = z.object({
+  id: z.number(),
+  project_id: z.number(),
+  action_name: z.string(),
+  target_id: z.number().nullable(),
+  target_type: z.string().nullable(),
+  author: GitLabEventAuthorSchema,
+  target_title: z.string().nullable(),
+  created_at: z.string(),
+  note: z.object({}).passthrough().nullable(),
+  push_data: z
+    .object({
+      commit_count: z.number().optional(),
+      action: z.string().optional(),
+      ref_type: z.string().optional(),
+      commit_from: z.string().optional(),
+      commit_to: z.string().optional(),
+      ref: z.string().optional(),
+      commit_title: z.string().optional(),
+    })
+    .nullable(),
+  author_username: z.string(),
+});
+
+export const GitLabEventsResponseSchema = z.object({
+  count: z.number(),
+  items: z.array(GitLabEventSchema),
+});
+
 // Base schemas for common types
 export const GitLabAuthorSchema = z.object({
   name: z.string(),
@@ -81,17 +142,32 @@ export const GitLabTreeSchema = z.object({
 });
 
 export const GitLabCommitSchema = z.object({
-  id: z.string(), // Changed from sha to match GitLab API
-  short_id: z.string(), // Added to match GitLab API
-  title: z.string(), // Changed from message to match GitLab API
+  id: z.string(), // The commit SHA
+  short_id: z.string(), // Shortened commit SHA
+  title: z.string(), // First line of the commit message
+  message: z.string().optional(), // Full commit message
   author_name: z.string(),
   author_email: z.string(),
-  authored_date: z.string(),
+  authored_date: z.string(), // ISO 8601 formatted date
   committer_name: z.string(),
   committer_email: z.string(),
-  committed_date: z.string(),
-  web_url: z.string(), // Changed from html_url to match GitLab API
-  parent_ids: z.array(z.string()) // Changed from parents to match GitLab API
+  committed_date: z.string(), // ISO 8601 formatted date
+  created_at: z.string().optional(), // ISO 8601 formatted date
+  web_url: z.string(), // URL to view the commit
+  parent_ids: z.array(z.string()), // Array of parent commit SHAs
+  stats: z
+    .object({
+      additions: z.number(),
+      deletions: z.number(),
+      total: z.number(),
+    })
+    .optional(), // Only present when with_stats=true
+});
+
+// Define the response schema for the list_commits tool
+export const GitLabCommitsResponseSchema = z.object({
+  count: z.number(), // Total number of commits
+  items: z.array(GitLabCommitSchema),
 });
 
 // Reference schema
@@ -341,6 +417,220 @@ export const ListGroupProjectsSchema = z.object({
   per_page: z.number().optional().describe("Number of results per page")
 });
 
+// Get project events schema
+export const GetProjectEventsSchema = ProjectParamsSchema.extend({
+  action: z
+    .string()
+    .optional()
+    .describe("Include only events of a particular action type"),
+  target_type: z
+    .string()
+    .optional()
+    .describe("Include only events of a particular target type"),
+  before: z
+    .string()
+    .optional()
+    .describe("Include only events created before a particular date"),
+  after: z
+    .string()
+    .optional()
+    .describe("Include only events created after a particular date"),
+  sort: z
+    .enum(["asc", "desc"])
+    .optional()
+    .describe("Sort events in ascending or descending order (default: desc)"),
+  page: z.number().optional().describe("Page number for pagination"),
+  per_page: z
+    .number()
+    .optional()
+    .describe("Number of results per page (default: 20)"),
+});
+
+// Define the input schema for the list_commits tool
+export const ListCommitsSchema = ProjectParamsSchema.extend({
+  sha: z
+    .string()
+    .optional()
+    .describe("The name of a repository branch or tag or commit SHA"),
+  since: z
+    .string()
+    .optional()
+    .describe(
+      "Only commits after or on this date will be returned (ISO 8601 format)"
+    ),
+  until: z
+    .string()
+    .optional()
+    .describe(
+      "Only commits before or on this date will be returned (ISO 8601 format)"
+    ),
+  path: z.string().optional().describe("The file path"),
+  all: z
+    .boolean()
+    .optional()
+    .describe("Retrieve every commit from the repository"),
+  with_stats: z.boolean().optional().describe("Include commit stats"),
+  first_parent: z
+    .boolean()
+    .optional()
+    .describe("Follow only the first parent commit upon seeing a merge commit"),
+  page: z.number().optional().describe("Page number for pagination"),
+  per_page: z
+    .number()
+    .optional()
+    .describe("Number of results per page (default: 20, max: 100)"),
+});
+
+// Define the input schema for the list_issues tool
+export const ListIssuesSchema = ProjectParamsSchema.extend({
+  state: z
+    .enum(["opened", "closed", "all"])
+    .optional()
+    .describe("Return issues with specified state"),
+  labels: z
+    .string()
+    .optional()
+    .describe("Return issues matching a comma-separated list of labels"),
+  milestone: z
+    .string()
+    .optional()
+    .describe("Return issues for a specific milestone"),
+  scope: z
+    .enum(["created_by_me", "assigned_to_me", "all"])
+    .optional()
+    .describe("Return issues for the given scope"),
+  author_id: z
+    .number()
+    .optional()
+    .describe("Return issues created by the given user id"),
+  assignee_id: z
+    .number()
+    .optional()
+    .describe("Return issues assigned to the given user id"),
+  search: z
+    .string()
+    .optional()
+    .describe("Search issues against their title and description"),
+  created_after: z
+    .string()
+    .optional()
+    .describe("Return issues created after the specified date"),
+  created_before: z
+    .string()
+    .optional()
+    .describe("Return issues created before the specified date"),
+  updated_after: z
+    .string()
+    .optional()
+    .describe("Return issues updated after the specified date"),
+  updated_before: z
+    .string()
+    .optional()
+    .describe("Return issues updated before the specified date"),
+  order_by: z
+    .enum([
+      "created_at",
+      "updated_at",
+      "priority",
+      "due_date",
+      "relative_position",
+      "label_priority",
+      "milestone_due",
+      "popularity",
+      "weight",
+    ])
+    .optional()
+    .describe("Return issues ordered by specified field"),
+  sort: z
+    .enum(["asc", "desc"])
+    .optional()
+    .describe("Return issues sorted in ascending or descending order"),
+  page: z.number().optional().describe("Page number for pagination"),
+  per_page: z.number().optional().describe("Number of results per page"),
+});
+
+export const GitLabIssuesResponseSchema = z.object({
+  count: z.number(),
+  items: z.array(GitLabIssueSchema),
+});
+
+// Define the input schema for the list_merge_requests tool
+export const ListMergeRequestsSchema = ProjectParamsSchema.extend({
+  state: z
+    .enum(["opened", "closed", "locked", "merged", "all"])
+    .optional()
+    .describe("Return merge requests with specified state"),
+  order_by: z
+    .enum(["created_at", "updated_at"])
+    .optional()
+    .describe("Return merge requests ordered by specified field"),
+  sort: z
+    .enum(["asc", "desc"])
+    .optional()
+    .describe("Return merge requests sorted in ascending or descending order"),
+  milestone: z
+    .string()
+    .optional()
+    .describe("Return merge requests for a specific milestone"),
+  labels: z
+    .string()
+    .optional()
+    .describe(
+      "Return merge requests matching a comma-separated list of labels"
+    ),
+  created_after: z
+    .string()
+    .optional()
+    .describe("Return merge requests created after the specified date"),
+  created_before: z
+    .string()
+    .optional()
+    .describe("Return merge requests created before the specified date"),
+  updated_after: z
+    .string()
+    .optional()
+    .describe("Return merge requests updated after the specified date"),
+  updated_before: z
+    .string()
+    .optional()
+    .describe("Return merge requests updated before the specified date"),
+  scope: z
+    .enum(["created_by_me", "assigned_to_me", "all"])
+    .optional()
+    .describe("Return merge requests for the given scope"),
+  author_id: z
+    .number()
+    .optional()
+    .describe("Return merge requests created by the given user id"),
+  assignee_id: z
+    .number()
+    .optional()
+    .describe("Return merge requests assigned to the given user id"),
+  search: z
+    .string()
+    .optional()
+    .describe("Search merge requests against their title and description"),
+  source_branch: z
+    .string()
+    .optional()
+    .describe("Return merge requests with the given source branch"),
+  target_branch: z
+    .string()
+    .optional()
+    .describe("Return merge requests with the given target branch"),
+  wip: z
+    .enum(["yes", "no"])
+    .optional()
+    .describe("Filter merge requests against their WIP status"),
+  page: z.number().optional().describe("Page number for pagination"),
+  per_page: z.number().optional().describe("Number of results per page"),
+});
+
+export const GitLabMergeRequestsResponseSchema = z.object({
+  count: z.number(),
+  items: z.array(GitLabMergeRequestSchema),
+});
+
 // Export types
 export type GitLabAuthor = z.infer<typeof GitLabAuthorSchema>;
 export type GitLabFork = z.infer<typeof GitLabForkSchema>;
@@ -363,3 +653,12 @@ export type GitLabSearchResponse = z.infer<typeof GitLabSearchResponseSchema>;
 export type GitLabGroupProjectsResponse = z.infer<typeof GitLabGroupProjectsResponseSchema>;
 export type GitLabGroupProject = z.infer<typeof GitLabGroupProjectSchema>;
 export type ListGroupProjects = z.infer<typeof ListGroupProjectsSchema>;
+export type GetProjectEvents = z.infer<typeof GetProjectEventsSchema>;
+export type GitLabEvent = z.infer<typeof GitLabEventSchema>;
+export type GitLabEventsResponse = z.infer<typeof GitLabEventsResponseSchema>;
+export type ListCommits = z.infer<typeof ListCommitsSchema>;
+export type GitLabCommitsResponse = z.infer<typeof GitLabCommitsResponseSchema>;
+export type ListIssues = z.infer<typeof ListIssuesSchema>;
+export type GitLabIssuesResponse = z.infer<typeof GitLabIssuesResponseSchema>;
+export type ListMergeRequests = z.infer<typeof ListMergeRequestsSchema>;
+export type GitLabMergeRequestsResponse = z.infer<typeof GitLabMergeRequestsResponseSchema>;
