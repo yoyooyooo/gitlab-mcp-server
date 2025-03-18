@@ -1,14 +1,27 @@
 {
-  "name": "gitlab-mcp-server",
+  "name": "@yoda.digital/gitlab-mcp-server",
   "version": "0.1.0",
   "description": "GitLab MCP Server with group projects listing feature",
   "main": "dist/index.js",
   "type": "module",
+  "bin": {
+    "gitlab-mcp-server": "./dist/index.js"
+  },
   "scripts": {
     "build": "tsc && chmod +x dist/index.js",
     "start": "node dist/index.js",
-    "inspector": "npx @modelcontextprotocol/inspector dist/index.js"
+    "inspector": "npx @modelcontextprotocol/inspector dist/index.js",
+    "prepublishOnly": "npm run build"
   },
+  "keywords": [
+    "gitlab",
+    "mcp",
+    "model-context-protocol",
+    "ai",
+    "llm"
+  ],
+  "author": "Ion (Nalyk) Calmis",
+  "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^0.6.0",
     "node-fetch": "^3.3.2",
@@ -18,5 +31,16 @@
   "devDependencies": {
     "@types/node": "^20.10.5",
     "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
   }
 }
