@@ -41,7 +41,7 @@ export const GitLabEventSchema = z.object({
   author: GitLabEventAuthorSchema,
   target_title: z.string().nullable(),
   created_at: z.string(),
-  note: z.object({}).passthrough().nullable(),
+  note: z.object({}).passthrough().nullable().optional(),
   push_data: z
     .object({
       commit_count: z.number().optional(),
@@ -52,7 +52,8 @@ export const GitLabEventSchema = z.object({
       ref: z.string().optional(),
       commit_title: z.string().optional(),
     })
-    .nullable(),
+    .nullable()
+    .optional(),
   author_username: z.string(),
 });
 
