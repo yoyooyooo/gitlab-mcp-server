@@ -52,7 +52,23 @@ This server is based on the [original GitLab MCP server](https://github.com/mode
 
 ## Installation
 
+### Option 1: Install from npm
+
 ```bash
+# Install globally
+npm install -g @yoda.digital/gitlab-mcp-server
+
+# Or use directly with npx
+npx -y @yoda.digital/gitlab-mcp-server
+```
+
+### Option 2: Build from source
+
+```bash
+# Clone the repository
+git clone https://github.com/your-username/gitlab-mcp-server.git
+cd gitlab-mcp-server
+
 # Install dependencies
 npm install
 
@@ -77,6 +93,15 @@ For the group projects listing feature and other operations, your GitLab persona
 
 ## Usage
 
+### Using the npm package
+
+```bash
+# Run with environment variables
+GITLAB_PERSONAL_ACCESS_TOKEN="your-token" GITLAB_API_URL="https://your-gitlab/api/v4" npx -y @yoda.digital/gitlab-mcp-server
+```
+
+### Using the local build
+
 ```bash
 # Start the server
 npm start
@@ -93,16 +118,18 @@ To use this server with MCP-enabled applications, add it to your MCP configurati
 {
   "mcpServers": {
     "gitlab": {
-      "command": "node",
-      "args": ["/path/to/gitlab-mcp-server/dist/index.js"],
+      "command": "npx",
+      "args": ["-y", "@yoda.digital/gitlab-mcp-server"],
       "env": {
-        "GITLAB_PERSONAL_ACCESS_TOKEN": "your-gitlab-token-here"
-      },
-      "disabled": false
+        "GITLAB_PERSONAL_ACCESS_TOKEN": "your-gitlab-token-here",
+        "GITLAB_API_URL": "https://your-selfhosted-git/api/v4"
+      }
     }
   }
 }
 ```
+
+The `GITLAB_API_URL` is optional and defaults to 'https://gitlab.com/api/v4' if not provided.
 
 ## Tools
 
