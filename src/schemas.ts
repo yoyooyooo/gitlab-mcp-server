@@ -47,8 +47,8 @@ export const GitLabEventSchema = z.object({
       commit_count: z.number().optional(),
       action: z.string().optional(),
       ref_type: z.string().optional(),
-      commit_from: z.string().optional(),
-      commit_to: z.string().optional(),
+      commit_from: z.string().nullable().optional(),
+      commit_to: z.string().nullable().optional(),
       ref: z.string().optional(),
       commit_title: z.string().optional(),
     })
