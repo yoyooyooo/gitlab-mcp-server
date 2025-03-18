@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/repo-logo.png" alt="GitLab MCP Server Logo" width="200">
+</p>
+
 # GitLab MCP Server (with activity tracking and group projects listing features)
 
 A Model Context Protocol (MCP) server for interacting with GitLab API. This server provides tools for working with GitLab repositories, issues, merge requests, and tracking project activities.
