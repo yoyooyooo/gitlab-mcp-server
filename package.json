@@ -1,17 +1,17 @@
 {
   "name": "@yoda.digital/gitlab-mcp-server",
-  "version": "0.1.0",
+  "version": "0.1.8",
   "description": "GitLab MCP Server with group projects listing feature",
   "main": "dist/index.js",
   "type": "module",
   "bin": {
-    "gitlab-mcp-server": "./dist/index.js"
+    "mcp-server-gitlab": "dist/index.js"
   },
   "scripts": {
-    "build": "tsc && chmod +x dist/index.js",
+    "build": "tsc && chmod +x dist/*.js",
     "start": "node dist/index.js",
     "inspector": "npx @modelcontextprotocol/inspector dist/index.js",
-    "prepublishOnly": "npm run build"
+    "prepare": "npm run build"
   },
   "keywords": [
     "gitlab",
@@ -30,15 +30,14 @@
   },
   "devDependencies": {
     "@types/node": "^20.10.5",
+    "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   },
   "engines": {
     "node": ">=20.0.0"
   },
   "files": [
-    "dist",
-    "README.md",
-    "LICENSE"
+    "dist"
   ],
   "publishConfig": {
     "access": "public"
