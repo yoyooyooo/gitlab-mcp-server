@@ -45,32 +45,61 @@ jobs:
 
             BULLET="* $DESC ($AUTHOR, $DATE)"
             case $TYPE in
-              feat) FEATURES+="$BULLET\n" ;;
-              fix) FIXES+="$BULLET\n" ;;
-              docs) DOCS+="$BULLET\n" ;;
-              style) STYLE+="$BULLET\n" ;;
-              refactor) REFACTOR+="$BULLET\n" ;;
-              test) TEST+="$BULLET\n" ;;
-              chore) CHORE+="$BULLET\n" ;;
-              *) OTHER+="$BULLET\n" ;;
+              feat) FEATURES="$FEATURES$BULLET"$'\n' ;;
+              fix) FIXES="$FIXES$BULLET"$'\n' ;;
+              docs) DOCS="$DOCS$BULLET"$'\n' ;;
+              style) STYLE="$STYLE$BULLET"$'\n' ;;
+              refactor) REFACTOR="$REFACTOR$BULLET"$'\n' ;;
+              test) TEST="$TEST$BULLET"$'\n' ;;
+              chore) CHORE="$CHORE$BULLET"$'\n' ;;
+              *) OTHER="$OTHER$BULLET"$'\n' ;;
             esac
           done <<< "$COMMITS"
 
-          NEW_SECTION="## Changes from Push on $(date '+%Y-%m-%d')\n\n"
-          [ -n "$FEATURES" ] && NEW_SECTION+="### Features\n$FEATURES\n"
-          [ -n "$FIXES" ] && NEW_SECTION+="### Fixes\n$FIXES\n"
-          [ -n "$DOCS" ] && NEW_SECTION+="### Documentation\n$DOCS\n"
-          [ -n "$STYLE" ] && NEW_SECTION+="### Style\n$STYLE\n"
-          [ -n "$REFACTOR" ] && NEW_SECTION+="### Refactor\n$REFACTOR\n"
-          [ -n "$TEST" ] && NEW_SECTION+="### Tests\n$TEST\n"
-          [ -n "$CHORE" ] && NEW_SECTION+="### Chore\n$CHORE\n"
-          [ -n "$OTHER" ] && NEW_SECTION+="### Other\n$OTHER\n"
+          # Create the new section with proper line breaks
+          NEW_SECTION="## Changes from Push on $(date '+%Y-%m-%d')"$'\n\n'
+
+          if [ -n "$FEATURES" ]; then
+            NEW_SECTION="${NEW_SECTION}### Features"$'\n'"$FEATURES"$'\n'
+          fi
+
+          if [ -n "$FIXES" ]; then
+            NEW_SECTION="${NEW_SECTION}### Fixes"$'\n'"$FIXES"$'\n'
+          fi
+
+          if [ -n "$DOCS" ]; then
+            NEW_SECTION="${NEW_SECTION}### Documentation"$'\n'"$DOCS"$'\n'
+          fi
+
+          if [ -n "$STYLE" ]; then
+            NEW_SECTION="${NEW_SECTION}### Style"$'\n'"$STYLE"$'\n'
+          fi
+
+          if [ -n "$REFACTOR" ]; then
+            NEW_SECTION="${NEW_SECTION}### Refactor"$'\n'"$REFACTOR"$'\n'
+          fi
+
+          if [ -n "$TEST" ]; then
+            NEW_SECTION="${NEW_SECTION}### Tests"$'\n'"$TEST"$'\n'
+          fi
+
+          if [ -n "$CHORE" ]; then
+            NEW_SECTION="${NEW_SECTION}### Chore"$'\n'"$CHORE"$'\n'
+          fi
+
+          if [ -n "$OTHER" ]; then
+            NEW_SECTION="${NEW_SECTION}### Other"$'\n'"$OTHER"$'\n'
+          fi
 
           if [ -f CHANGELOG.md ]; then
+            # First, fix the existing CHANGELOG.md if it contains literal \n
+            sed -i 's/\\n/\'$'\n''/g' CHANGELOG.md
+            
+            # Then prepend the new section
             printf "%s\n%s" "$NEW_SECTION" "$(cat CHANGELOG.md)" > temp.md
             mv temp.md CHANGELOG.md
           else
-            echo "# Project Changelog\n\n$NEW_SECTION" > CHANGELOG.md
+            echo -e "# Project Changelog\n\n$NEW_SECTION" > CHANGELOG.md
           fi
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v4
