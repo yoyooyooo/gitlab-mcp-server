@@ -1,0 +1,79 @@
+name: Update Changelog
+
+on: [push]
+
+jobs:
+  update-changelog:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Update changelog
+        run: |
+          BEFORE_SHA=${{ github.event.before }}
+          CURRENT_SHA=${{ github.sha }}
+          if [ "$BEFORE_SHA" = "0000000000000000000000000000000000000000" ]; then
+            COMMITS=$(git log --pretty=format:"%h|%s|%an|%ad" --date=short -n 10)
+          else
+            COMMITS=$(git log --pretty=format:"%h|%s|%an|%ad" --date=short "$BEFORE_SHA..$CURRENT_SHA")
+          fi
+
+          FEATURES=""
+          FIXES=""
+          DOCS=""
+          STYLE=""
+          REFACTOR=""
+          TEST=""
+          CHORE=""
+          OTHER=""
+
+          while IFS= read -r line; do
+            MESSAGE=$(echo "$line" | cut -d'|' -f2)
+            AUTHOR=$(echo "$line" | cut -d'|' -f3)
+            DATE=$(echo "$line" | cut -d'|' -f4)
+
+            if [[ $MESSAGE =~ ^([a-z]+):[[:space:]]*(.*) ]]; then
+              TYPE=${BASH_REMATCH[1]}
+              DESC=${BASH_REMATCH[2]}
+            else
+              TYPE="other"
+              DESC="$MESSAGE"
+            fi
+
+            BULLET="* $DESC ($AUTHOR, $DATE)"
+            case $TYPE in
+              feat) FEATURES+="$BULLET\n" ;;
+              fix) FIXES+="$BULLET\n" ;;
+              docs) DOCS+="$BULLET\n" ;;
+              style) STYLE+="$BULLET\n" ;;
+              refactor) REFACTOR+="$BULLET\n" ;;
+              test) TEST+="$BULLET\n" ;;
+              chore) CHORE+="$BULLET\n" ;;
+              *) OTHER+="$BULLET\n" ;;
+            esac
+          done <<< "$COMMITS"
+
+          NEW_SECTION="## Changes from Push on $(date '+%Y-%m-%d')\n\n"
+          [ -n "$FEATURES" ] && NEW_SECTION+="### Features\n$FEATURES\n"
+          [ -n "$FIXES" ] && NEW_SECTION+="### Fixes\n$FIXES\n"
+          [ -n "$DOCS" ] && NEW_SECTION+="### Documentation\n$DOCS\n"
+          [ -n "$STYLE" ] && NEW_SECTION+="### Style\n$STYLE\n"
+          [ -n "$REFACTOR" ] && NEW_SECTION+="### Refactor\n$REFACTOR\n"
+          [ -n "$TEST" ] && NEW_SECTION+="### Tests\n$TEST\n"
+          [ -n "$CHORE" ] && NEW_SECTION+="### Chore\n$CHORE\n"
+          [ -n "$OTHER" ] && NEW_SECTION+="### Other\n$OTHER\n"
+
+          if [ -f CHANGELOG.md ]; then
+            printf "%s\n%s" "$NEW_SECTION" "$(cat CHANGELOG.md)" > temp.md
+            mv temp.md CHANGELOG.md
+          else
+            echo "# Project Changelog\n\n$NEW_SECTION" > CHANGELOG.md
+          fi
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "docs: update changelog [skip ci]"
+          file_pattern: CHANGELOG.md
