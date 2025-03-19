@@ -85,6 +85,14 @@ if (!GITLAB_PERSONAL_ACCESS_TOKEN) {
   process.exit(1);
 }
 
+/**
+ * Forks a GitLab project to a specified namespace.
+ *
+ * @param projectId - The ID or URL-encoded path of the project to fork
+ * @param namespace - Optional namespace to fork the project into
+ * @returns A promise that resolves to the forked project details
+ * @throws Will throw an error if the GitLab API request fails
+ */
 async function forkProject(
   projectId: string,
   namespace?: string
@@ -107,6 +115,14 @@ async function forkProject(
   return GitLabForkSchema.parse(await response.json());
 }
 
+/**
+ * Creates a new branch in a GitLab project.
+ *
+ * @param projectId - The ID or URL-encoded path of the project
+ * @param options - Options for creating the branch, including name and ref
+ * @returns A promise that resolves to the created branch details
+ * @throws Will throw an error if the GitLab API request fails
+ */
 async function createBranch(
   projectId: string,
   options: z.infer<typeof CreateBranchOptionsSchema>
@@ -133,6 +149,13 @@ async function createBranch(
   return GitLabReferenceSchema.parse(await response.json());
 }
 
+/**
+ * Retrieves the default branch reference for a GitLab project.
+ *
+ * @param projectId - The ID or URL-encoded path of the project
+ * @returns A promise that resolves to the default branch reference
+ * @throws Will throw an error if the GitLab API request fails
+ */
 async function getDefaultBranchRef(projectId: string): Promise<string> {
   const response = await fetch(
     `${GITLAB_API_URL}/projects/${encodeURIComponent(projectId)}`,
@@ -151,6 +174,15 @@ async function getDefaultBranchRef(projectId: string): Promise<string> {
   return project.default_branch;
 }
 
+/**
+ * Retrieves the contents of a file from a GitLab project.
+ *
+ * @param projectId - The ID or URL-encoded path of the project
+ * @param filePath - The path of the file within the project
+ * @param ref - The name of the branch, tag, or commit
+ * @returns A promise that resolves to the file contents
+ * @throws Will throw an error if the GitLab API request fails
+ */
 async function getFileContents(
   projectId: string,
   filePath: string,
@@ -178,6 +210,14 @@ async function getFileContents(
   return data;
 }
 
+/**
+ * Creates a new issue in a GitLab project.
+ *
+ * @param projectId - The ID or URL-encoded path of the project
+ * @param options - Options for creating the issue, including title, description, assignee IDs, milestone ID, and labels
+ * @returns A promise that resolves to the created issue details
+ * @throws Will throw an error if the GitLab API request fails
+ */
 async function createIssue(
   projectId: string,
   options: z.infer<typeof CreateIssueOptionsSchema>
@@ -207,6 +247,14 @@ async function createIssue(
   return GitLabIssueSchema.parse(await response.json());
 }
 
+/**
+ * Creates a new merge request in a GitLab project.
+ *
+ * @param projectId - The ID or URL-encoded path of the project
+ * @param options - Options for creating the merge request, including title, description, source branch, target branch, allow collaboration, and draft status
+ * @returns A promise that resolves to the created merge request details
+ * @throws Will throw an error if the GitLab API request fails
+ */
 async function createMergeRequest(
   projectId: string,
   options: z.infer<typeof CreateMergeRequestOptionsSchema>
@@ -260,6 +308,18 @@ async function createMergeRequest(
   };
 }
 
+/**
+ * Creates or updates a file in a GitLab project.
+ *
+ * @param projectId - The ID or URL-encoded path of the project
+ * @param filePath - The path of the file within the project
+ * @param content - The content of the file
+ * @param commitMessage - The commit message for the change
+ * @param branch - The branch to commit the change to
+ * @param previousPath - Optional previous path if the file is being renamed
+ * @returns A promise that resolves to the created or updated file details
+ * @throws Will throw an error if the GitLab API request fails
+ */
 async function createOrUpdateFile(
   projectId: string,
   filePath: string,
@@ -310,6 +370,15 @@ async function createOrUpdateFile(
   };
 }
 
+/**
+ * Creates a tree structure in a GitLab project.
+ *
+ * @param projectId - The ID or URL-encoded path of the project
+ * @param files - An array of file operations to include in the tree
+ * @param ref - Optional reference (branch, tag, or commit) to base the tree on
+ * @returns A promise that resolves to the created tree details
+ * @throws Will throw an error if the GitLab API request fails
+ */
 async function createTree(
   projectId: string,
   files: FileOperation[],
@@ -340,6 +409,16 @@ async function createTree(
   return GitLabTreeSchema.parse(await response.json());
 }
 
+/**
+ * Creates a commit in a GitLab project.
+ *
+ * @param projectId - The ID or URL-encoded path of the project
+ * @param message - The commit message
+ * @param branch - The branch to commit the changes to
+ * @param actions - An array of file operations to include in the commit
+ * @returns A promise that resolves to the created commit details
+ * @throws Will throw an error if the GitLab API request fails
+ */
 async function createCommit(
   projectId: string,
   message: string,
@@ -373,6 +452,15 @@ async function createCommit(
   return GitLabCommitSchema.parse(await response.json());
 }
 
+/**
+ * Searches for GitLab projects based on a query.
+ *
+ * @param query - The search query
+ * @param page - The page number to retrieve (default is 1)
+ * @param perPage - The number of results per page (default is 20)
+ * @returns A promise that resolves to the search results
+ * @throws Will throw an error if the GitLab API request fails
+ */
 async function searchProjects(
   query: string,
   page: number = 1,
@@ -400,6 +488,14 @@ async function searchProjects(
   });
 }
 
+/**
+ * Lists all projects (repositories) within a specific GitLab group.
+ *
+ * @param groupId - The ID or URL-encoded path of the group
+ * @param options - Optional parameters for filtering and pagination
+ * @returns A promise that resolves to the list of group projects
+ * @throws Will throw an error if the GitLab API request fails
+ */
 async function listGroupProjects(
   groupId: string,
   options: {
@@ -447,11 +543,12 @@ async function listGroupProjects(
 }
 
 /**
- * Retrieves events for a GitLab project
+ * Retrieves events for a GitLab project.
  *
  * @param projectId - The ID or URL-encoded path of the project
  * @param options - Optional parameters for filtering and pagination
  * @returns A promise that resolves to the events response
+ * @throws Will throw an error if the GitLab API request fails
  */
 async function getProjectEvents(
   projectId: string,
@@ -598,11 +695,12 @@ function formatEventsResponse(events: GitLabEventsResponse) {
 }
 
 /**
- * Retrieves commits for a GitLab project
+ * Retrieves commits for a GitLab project.
  *
  * @param projectId - The ID or URL-encoded path of the project
  * @param options - Optional parameters for filtering and pagination
  * @returns A promise that resolves to the commits response
+ * @throws Will throw an error if the GitLab API request fails
  */
 async function listCommits(
   projectId: string,
@@ -752,11 +850,12 @@ function formatCommitsResponse(commits: GitLabCommitsResponse) {
 }
 
 /**
- * Retrieves issues for a GitLab project
+ * Retrieves issues for a GitLab project.
  *
  * @param projectId - The ID or URL-encoded path of the project
  * @param options - Optional parameters for filtering and pagination
  * @returns A promise that resolves to the issues response
+ * @throws Will throw an error if the GitLab API request fails
  */
 async function listIssues(
   projectId: string,
@@ -897,11 +996,12 @@ function formatIssuesResponse(issues: GitLabIssuesResponse) {
 }
 
 /**
- * Retrieves merge requests for a GitLab project
+ * Retrieves merge requests for a GitLab project.
  *
  * @param projectId - The ID or URL-encoded path of the project
  * @param options - Optional parameters for filtering and pagination
  * @returns A promise that resolves to the merge requests response
+ * @throws Will throw an error if the GitLab API request fails
  */
 async function listMergeRequests(
   projectId: string,
@@ -1042,6 +1142,13 @@ function formatMergeRequestsResponse(
   };
 }
 
+/**
+ * Creates a new GitLab project (repository).
+ *
+ * @param options - Options for creating the repository, including name, description, visibility, and initialization with README
+ * @returns A promise that resolves to the created repository details
+ * @throws Will throw an error if the GitLab API request fails
+ */
 async function createRepository(
   options: z.infer<typeof CreateRepositoryOptionsSchema>
 ): Promise<GitLabRepository> {
