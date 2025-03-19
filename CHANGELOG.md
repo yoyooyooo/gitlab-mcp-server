@@ -1,1 +1,2 @@
+## Changes from Push on 2025-03-19\n\n### Fixes\n* Update npm publish workflow. (nalyk, 2025-03-19)\n* Update npm publish workflow. (nalyk, 2025-03-19)\n\n### Other\n* Merge branch 'main' of github.com:yoda-digital/mcp-gitlab-server (nalyk, 2025-03-19)\n\n
 ## Changes from Push on 2025-03-19\n\n### Features\n* Add changelog update workflow. (nalyk, 2025-03-19)\n\n
