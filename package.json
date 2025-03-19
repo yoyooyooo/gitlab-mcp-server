@@ -1,6 +1,6 @@
 {
   "name": "@yoda.digital/gitlab-mcp-server",
-  "version": "0.1.15",
+  "version": "0.1.16",
   "description": "GitLab MCP Server with group projects listing feature",
   "main": "dist/index.js",
   "type": "module",
