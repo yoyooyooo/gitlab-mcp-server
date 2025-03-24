@@ -1,3 +1,9 @@
+## Changes from Push on 2025-03-24
+
+### Features
+* update license, add utility function for ISO date validation, enhance tsconfig, and improve .gitignore, add support for SSE (nalyk, 2025-03-24)
+
+
 # Changelog
 
 All notable changes to this project will be documented in this file.
