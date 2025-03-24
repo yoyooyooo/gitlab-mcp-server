@@ -18,9 +18,17 @@ A Model Context Protocol (MCP) server for GitLab integration, providing tools to
 
 ## Installation
 
+### From npm (Recommended)
+
+```bash
+npm install @yoda.digital/gitlab-mcp-server
+```
+
+### From Source
+
 ```bash
 # Clone the repository
-git clone https://github.com/yoda-digital/mcp-gitlab-server.git
+git clone https://github.com/yourusername/mcp-gitlab-server.git
 cd mcp-gitlab-server
 
 # Install dependencies
@@ -32,12 +40,38 @@ npm run build
 
 ## Configuration
 
-The server requires the following environment variables:
+### Environment Variables
+
+The server requires the following environment variables when running directly:
 
 - `GITLAB_PERSONAL_ACCESS_TOKEN` (required): Your GitLab personal access token
 - `GITLAB_API_URL` (optional): The GitLab API URL (defaults to 'https://gitlab.com/api/v4')
 - `PORT` (optional): The port to use for SSE transport (defaults to 3000)
 - `USE_SSE` (optional): Set to 'true' to use SSE transport instead of stdio (defaults to 'false')
+
+### MCP Settings Configuration
+
+You can add the GitLab MCP server to your MCP settings file (e.g., `cline_mcp_settings.json` or `claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "gitlab": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@yoda.digital/gitlab-mcp-server"
+      ],
+      "env": {
+        "GITLAB_PERSONAL_ACCESS_TOKEN": "your_token_here",
+        "GITLAB_API_URL": "https://gitlab.com/api/v4"
+      },
+      "alwaysAllow": [],
+      "disabled": false
+    }
+  }
+}
+```
 
 ## Usage
 
@@ -61,6 +95,13 @@ export PORT=3000  # Optional, defaults to 3000
 
 # Run the server
 npm start
+```
+
+### Running with npx
+
+```bash
+# Run directly with npx
+GITLAB_PERSONAL_ACCESS_TOKEN=your_token_here npx @yoda.digital/gitlab-mcp-server
 ```
 
 ## Available Tools
@@ -278,10 +319,6 @@ npm run build
 npm test
 ```
 
-<a href="https://glama.ai/mcp/servers/@yoda-digital/mcp-gitlab-server">
-  <img width="380" height="200" src="https://glama.ai/mcp/servers/@yoda-digital/mcp-gitlab-server/badge" />
-</a>
-
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
@@ -289,3 +326,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+
+## NPM Package
+
+This package is available on npm:
+https://www.npmjs.com/package/@yoda.digital/gitlab-mcp-server
