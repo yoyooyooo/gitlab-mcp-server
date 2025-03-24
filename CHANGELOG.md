@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * bump version to 0.2.2 in package.json (nalyk, 2025-03-24)
 * update repository URL in README and bump version to 0.2.1 in package.json (nalyk, 2025-03-24)
 * update version to 0.2.3 in package.json and add badge to README (nalyk, 2025-03-24)
+* update version to 0.2.4 in package.json (nalyk, 2025-03-24)
 
 ### Documentation
 * update README with installation instructions and MCP settings configuration (nalyk, 2025-03-24)
