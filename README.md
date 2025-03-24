@@ -1,78 +1,32 @@
-<p align="center">
-  <img src="assets/repo-logo.png" alt="GitLab MCP Server Logo" width="200">
-</p>
+# GitLab MCP Server
 
-# GitLab MCP Server (with activity tracking and group projects listing features)
-
-A Model Context Protocol (MCP) server for interacting with GitLab API. This server provides tools for working with GitLab repositories, issues, merge requests, and tracking project activities.
+A Model Context Protocol (MCP) server for GitLab integration, providing tools to interact with GitLab repositories, issues, merge requests, and more.
 
 ## Features
 
-- **Create or Update Files**: Create or update files in GitLab repositories
-- **Search Repositories**: Search for GitLab projects using keywords
-- **Create Repository**: Create a new GitLab repository
-- **Get File Contents**: Retrieve file contents from GitLab repositories
-- **Push Files**: Push multiple files to a GitLab repository in a single commit
-- **Create Issue**: Create a new issue in a GitLab project
-- **Create Merge Request**: Create a new merge request in a GitLab project
-- **Fork Repository**: Fork a GitLab repository to your account or specified namespace
-- **Create Branch**: Create a new branch in a GitLab repository
-- **List Group Projects**: List all projects (repositories) within a specific GitLab group
-- **Get Project Events**: Retrieve a chronological list of all events in a GitLab project
-- **List Commits**: Get commit history for a GitLab project with filtering options
-- **List Issues**: Retrieve issues for a GitLab project with comprehensive filtering
-- **List Merge Requests**: Get merge requests for a GitLab project with filtering options
-
-## Comparison with Original Implementation
-
-This server is based on the [original GitLab MCP server](https://github.com/modelcontextprotocol/servers/tree/main/src/gitlab) with the following enhancements:
-
-### Added Features
-
-- **Group Projects Listing**: The addition of the `list_group_projects` tool, which allows listing all projects within a specific GitLab group with extensive filtering options.
-- **Activity Tracking**: A comprehensive set of tools for tracking project activities:
-  - `get_project_events`: Retrieve all activities in a GitLab project
-  - `list_commits`: Get commit history with filtering options
-  - `list_issues`: Retrieve issues with comprehensive filtering
-  - `list_merge_requests`: Get merge requests with filtering options
-
-### Technical Improvements
-
-- **Enhanced Schema Support**: Added specialized schemas for group projects, events, commits, issues, and merge requests.
-- **Comprehensive Filtering**: All new features support extensive filtering options for precise data retrieval.
-- **Pagination Support**: Implemented proper pagination for all listing features to handle large datasets efficiently.
-- **Formatted Responses**: All responses include both raw data and formatted data for better readability.
-
-### Implementation Details
-
-- Added functions that interface with GitLab API endpoints: `listGroupProjects`, `getProjectEvents`, `listCommits`, `listIssues`, and `listMergeRequests`
-- Created new schema definitions for all new features
-- Implemented robust error handling and response formatting
-- Exposed the new functionality through the MCP tools interface
+- Support for both stdio and SSE transports
+- Strict TypeScript typing with the MCP SDK
+- Comprehensive GitLab API integration
+- Repository operations (search, create, fork)
+- File operations (read, create, update)
+- Branch operations (create)
+- Issue management (create, list, filter)
+- Merge request handling (create, list, filter)
+- Group projects listing
+- Project events retrieval
+- Commit history access
 
 ## Installation
 
-### Option 1: Install from npm
-
-```bash
-# Install globally
-npm install -g @yoda.digital/gitlab-mcp-server
-
-# Or use directly with npx
-npx -y @yoda.digital/gitlab-mcp-server
-```
-
-### Option 2: Build from source
-
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/gitlab-mcp-server.git
-cd gitlab-mcp-server
+git clone https://github.com/yourusername/mcp-gitlab-server.git
+cd mcp-gitlab-server
 
 # Install dependencies
 npm install
 
-# Build the server
+# Build the project
 npm run build
 ```
 
@@ -80,474 +34,253 @@ npm run build
 
 The server requires the following environment variables:
 
-- `GITLAB_PERSONAL_ACCESS_TOKEN`: Your GitLab personal access token with API access
+- `GITLAB_PERSONAL_ACCESS_TOKEN` (required): Your GitLab personal access token
 - `GITLAB_API_URL` (optional): The GitLab API URL (defaults to 'https://gitlab.com/api/v4')
-
-### Token Permissions
-
-For the group projects listing feature and other operations, your GitLab personal access token should have the following scopes:
-
-- `api` - Full API access
-- `read_repository` - For read operations on repositories
-- `write_repository` - For write operations on repositories (if needed)
+- `PORT` (optional): The port to use for SSE transport (defaults to 3000)
+- `USE_SSE` (optional): Set to 'true' to use SSE transport instead of stdio (defaults to 'false')
 
 ## Usage
 
-### Using the npm package
+### Running with stdio transport (default)
 
 ```bash
-# Run with environment variables
-GITLAB_PERSONAL_ACCESS_TOKEN="your-token" GITLAB_API_URL="https://your-gitlab/api/v4" npx -y @yoda.digital/gitlab-mcp-server
-```
+# Set your GitLab personal access token
+export GITLAB_PERSONAL_ACCESS_TOKEN=your_token_here
 
-### Using the local build
-
-```bash
-# Start the server
+# Run the server
 npm start
-
-# Test with the MCP Inspector
-npm run inspector
 ```
 
-### Integration with MCP
+### Running with SSE transport
 
-To use this server with MCP-enabled applications, add it to your MCP configuration:
+```bash
+# Set your GitLab personal access token and enable SSE
+export GITLAB_PERSONAL_ACCESS_TOKEN=your_token_here
+export USE_SSE=true
+export PORT=3000  # Optional, defaults to 3000
 
-```json
-{
-  "mcpServers": {
-    "gitlab": {
-      "command": "npx",
-      "args": ["-y", "@yoda.digital/gitlab-mcp-server"],
-      "env": {
-        "GITLAB_PERSONAL_ACCESS_TOKEN": "your-gitlab-token-here",
-        "GITLAB_API_URL": "https://your-selfhosted-git/api/v4"
-      }
-    }
+# Run the server
+npm start
+```
+
+## Available Tools
+
+The server provides the following tools:
+
+### Repository Operations
+
+- `search_repositories`: Search for GitLab projects
+  ```json
+  {
+    "search": "project-name",
+    "page": 1,
+    "per_page": 20
   }
-}
-```
+  ```
 
-The `GITLAB_API_URL` is optional and defaults to 'https://gitlab.com/api/v4' if not provided.
+- `create_repository`: Create a new GitLab project
+  ```json
+  {
+    "name": "new-project",
+    "description": "A new project",
+    "visibility": "private",
+    "initialize_with_readme": true
+  }
+  ```
 
-## Tools
+- `fork_repository`: Fork a GitLab project
+  ```json
+  {
+    "project_id": "username/project",
+    "namespace": "target-namespace"
+  }
+  ```
 
-### create_or_update_file
+- `list_group_projects`: List all projects within a specific GitLab group
+  ```json
+  {
+    "group_id": "group-name",
+    "archived": false,
+    "visibility": "public",
+    "include_subgroups": true,
+    "page": 1,
+    "per_page": 20
+  }
+  ```
 
-Create or update a single file in a GitLab project.
+### File Operations
 
-Parameters:
+- `get_file_contents`: Get the contents of a file from a GitLab project
+  ```json
+  {
+    "project_id": "username/project",
+    "file_path": "path/to/file.txt",
+    "ref": "main"
+  }
+  ```
 
-- `project_id`: Project ID or URL-encoded path
-- `file_path`: Path where to create/update the file
-- `content`: Content of the file
-- `commit_message`: Commit message
-- `branch`: Branch to create/update the file in
-- `previous_path` (optional): Path of the file to move/rename
+- `create_or_update_file`: Create or update a single file in a GitLab project
+  ```json
+  {
+    "project_id": "username/project",
+    "file_path": "path/to/file.txt",
+    "content": "File content here",
+    "commit_message": "Add/update file",
+    "branch": "main",
+    "previous_path": "old/path/to/file.txt"
+  }
+  ```
 
-### search_repositories
-
-Search for GitLab projects.
-
-Parameters:
-
-- `search`: Search query
-- `page` (optional): Page number for pagination (default: 1)
-- `per_page` (optional): Number of results per page (default: 20)
-
-### create_repository
-
-Create a new GitLab project.
-
-Parameters:
-
-- `name`: Repository name
-- `description` (optional): Repository description
-- `visibility` (optional): Repository visibility level ('private', 'internal', or 'public')
-- `initialize_with_readme` (optional): Initialize with README.md
-
-### get_file_contents
-
-Get the contents of a file or directory from a GitLab project.
-
-Parameters:
-
-- `project_id`: Project ID or URL-encoded path
-- `file_path`: Path to the file or directory
-- `ref` (optional): Branch/tag/commit to get contents from
-
-### push_files
-
-Push multiple files to a GitLab project in a single commit.
-
-Parameters:
-
-- `project_id`: Project ID or URL-encoded path
-- `branch`: Branch to push to
-- `files`: Array of files to push (each with `file_path` and `content`)
-- `commit_message`: Commit message
-
-### create_issue
-
-Create a new issue in a GitLab project.
-
-Parameters:
-
-- `project_id`: Project ID or URL-encoded path
-- `title`: Issue title
-- `description` (optional): Issue description
-- `assignee_ids` (optional): Array of user IDs to assign
-- `labels` (optional): Array of label names
-- `milestone_id` (optional): Milestone ID to assign
-
-### create_merge_request
-
-Create a new merge request in a GitLab project.
-
-Parameters:
-
-- `project_id`: Project ID or URL-encoded path
-- `title`: Merge request title
-- `description` (optional): Merge request description
-- `source_branch`: Branch containing changes
-- `target_branch`: Branch to merge into
-- `draft` (optional): Create as draft merge request
-- `allow_collaboration` (optional): Allow commits from upstream members
-
-### fork_repository
-
-Fork a GitLab project to your account or specified namespace.
-
-Parameters:
-
-- `project_id`: Project ID or URL-encoded path
-- `namespace` (optional): Namespace to fork to (full path)
-
-### create_branch
-
-Create a new branch in a GitLab project.
-
-Parameters:
-
-- `project_id`: Project ID or URL-encoded path
-- `branch`: Name for the new branch
-- `ref` (optional): Source branch/commit for new branch
-
-### list_group_projects
-
-List all projects (repositories) within a specific GitLab group.
-
-Parameters:
-
-- `group_id`: Group ID or URL-encoded path of the group
-- `archived` (optional): Limit by archived status (boolean)
-- `visibility` (optional): Limit by visibility ('public', 'internal', or 'private')
-- `order_by` (optional): Return projects ordered by specified field ('id', 'name', 'path', 'created_at', 'updated_at', 'last_activity_at')
-- `sort` (optional): Return projects sorted in ascending or descending order ('asc' or 'desc')
-- `search` (optional): Return list of projects matching the search criteria
-- `simple` (optional): Return only limited fields for each project (boolean)
-- `include_subgroups` (optional): Include projects in subgroups of this group (boolean)
-- `page` (optional): Page number for pagination (default: 1)
-- `per_page` (optional): Number of results per page (default: 20)
-
-Example:
-
-```json
-{
-  "group_id": "my-organization/my-group",
-  "visibility": "internal",
-  "include_subgroups": true,
-  "order_by": "name",
-  "sort": "asc"
-}
-```
-
-Response:
-
-```json
-{
-  "count": 25,
-  "items": [
-    {
-      "id": 123,
-      "name": "Project A",
-      "path_with_namespace": "my-organization/my-group/project-a",
-      "visibility": "internal",
-      "web_url": "https://gitlab.com/my-organization/my-group/project-a",
-      "description": "Description of Project A",
-      "created_at": "2023-01-15T10:00:00Z",
-      "last_activity_at": "2023-05-20T14:30:00Z",
-      "default_branch": "main"
-    }
-    // Additional projects...
-  ]
-}
-```
-
-### get_project_events
-
-Get recent events/activities for a GitLab project.
-
-Parameters:
-
-- `project_id`: Project ID or URL-encoded path
-- `action` (optional): Include only events of a particular action type
-- `target_type` (optional): Include only events of a particular target type
-- `before` (optional): Include only events created before a particular date
-- `after` (optional): Include only events created after a particular date
-- `sort` (optional): Sort events in ascending or descending order ('asc' or 'desc')
-- `page` (optional): Page number for pagination
-- `per_page` (optional): Number of results per page (default: 20, max: 100)
-
-Example:
-
-```json
-{
-  "project_id": "my-group/my-project",
-  "target_type": "Issue",
-  "after": "2025-01-01T00:00:00Z",
-  "sort": "asc",
-  "per_page": 50
-}
-```
-
-Response:
-
-```json
-{
-  "count": 15,
-  "formatted_events": [
-    {
-      "id": 123,
-      "action": "opened",
-      "author": "John Doe (johndoe)",
-      "date": "2025-01-15T10:30:45Z",
-      "target_type": "Issue",
-      "issue_title": "Fix login bug"
-    }
-    // Additional events...
-  ],
-  "raw_events": [
-    // Raw event data...
-  ]
-}
-```
-
-### list_commits
-
-Get commit history for a GitLab project.
-
-Parameters:
-
-- `project_id`: Project ID or URL-encoded path
-- `sha` (optional): The name of a repository branch or tag or commit SHA
-- `since` (optional): Only commits after or on this date will be returned (ISO 8601 format)
-- `until` (optional): Only commits before or on this date will be returned (ISO 8601 format)
-- `path` (optional): The file path
-- `all` (optional): Retrieve every commit from the repository
-- `with_stats` (optional): Include commit stats
-- `first_parent` (optional): Follow only the first parent commit upon seeing a merge commit
-- `page` (optional): Page number for pagination
-- `per_page` (optional): Number of results per page (default: 20, max: 100)
-
-Example:
-
-```json
-{
-  "project_id": "my-group/my-project",
-  "sha": "main",
-  "since": "2025-01-01T00:00:00Z",
-  "path": "src/index.ts",
-  "with_stats": true,
-  "per_page": 30
-}
-```
-
-Response:
-
-```json
-{
-  "count": 25,
-  "formatted_commits": [
-    {
-      "id": "abc123d",
-      "title": "Update index.ts with new feature",
-      "author": "Jane Smith",
-      "author_email": "jane@example.com",
-      "date": "2025-02-15T14:30:22Z",
-      "web_url": "https://gitlab.com/my-group/my-project/-/commit/abc123def456",
-      "stats": {
-        "additions": 45,
-        "deletions": 12,
-        "total": 57
+- `push_files`: Push multiple files to a GitLab project in a single commit
+  ```json
+  {
+    "project_id": "username/project",
+    "files": [
+      {
+        "path": "file1.txt",
+        "content": "Content for file 1"
+      },
+      {
+        "path": "file2.txt",
+        "content": "Content for file 2"
       }
-    }
-    // Additional commits...
-  ],
-  "raw_commits": [
-    // Raw commit data...
-  ]
-}
+    ],
+    "commit_message": "Add multiple files",
+    "branch": "main"
+  }
+  ```
+
+### Branch Operations
+
+- `create_branch`: Create a new branch in a GitLab project
+  ```json
+  {
+    "project_id": "username/project",
+    "branch": "new-branch",
+    "ref": "main"
+  }
+  ```
+
+### Issue Operations
+
+- `create_issue`: Create a new issue in a GitLab project
+  ```json
+  {
+    "project_id": "username/project",
+    "title": "Issue title",
+    "description": "Issue description",
+    "assignee_ids": [1, 2],
+    "milestone_id": 1,
+    "labels": ["bug", "critical"]
+  }
+  ```
+
+- `list_issues`: Get issues for a GitLab project with filtering
+  ```json
+  {
+    "project_id": "username/project",
+    "state": "opened",
+    "labels": "bug,critical",
+    "milestone": "v1.0",
+    "author_id": 1,
+    "assignee_id": 2,
+    "search": "keyword",
+    "created_after": "2023-01-01T00:00:00Z",
+    "created_before": "2023-12-31T23:59:59Z",
+    "updated_after": "2023-06-01T00:00:00Z",
+    "updated_before": "2023-06-30T23:59:59Z",
+    "page": 1,
+    "per_page": 20
+  }
+  ```
+
+### Merge Request Operations
+
+- `create_merge_request`: Create a new merge request in a GitLab project
+  ```json
+  {
+    "project_id": "username/project",
+    "title": "Merge request title",
+    "description": "Merge request description",
+    "source_branch": "feature-branch",
+    "target_branch": "main",
+    "allow_collaboration": true,
+    "draft": false
+  }
+  ```
+
+- `list_merge_requests`: Get merge requests for a GitLab project with filtering
+  ```json
+  {
+    "project_id": "username/project",
+    "state": "opened",
+    "order_by": "created_at",
+    "sort": "desc",
+    "milestone": "v1.0",
+    "labels": "feature,enhancement",
+    "created_after": "2023-01-01T00:00:00Z",
+    "created_before": "2023-12-31T23:59:59Z",
+    "updated_after": "2023-06-01T00:00:00Z",
+    "updated_before": "2023-06-30T23:59:59Z",
+    "author_id": 1,
+    "assignee_id": 2,
+    "search": "keyword",
+    "source_branch": "feature-branch",
+    "target_branch": "main",
+    "page": 1,
+    "per_page": 20
+  }
+  ```
+
+### Project Activity
+
+- `get_project_events`: Get recent events/activities for a GitLab project
+  ```json
+  {
+    "project_id": "username/project",
+    "action": "pushed",
+    "target_type": "issue",
+    "before": "2023-12-31T23:59:59Z",
+    "after": "2023-01-01T00:00:00Z",
+    "sort": "desc",
+    "page": 1,
+    "per_page": 20
+  }
+  ```
+
+- `list_commits`: Get commit history for a GitLab project
+  ```json
+  {
+    "project_id": "username/project",
+    "sha": "branch-or-commit-sha",
+    "path": "path/to/file",
+    "since": "2023-01-01T00:00:00Z",
+    "until": "2023-12-31T23:59:59Z",
+    "all": true,
+    "with_stats": true,
+    "first_parent": true,
+    "page": 1,
+    "per_page": 20
+  }
+  ```
+
+## Development
+
+### Building the Project
+
+```bash
+npm run build
 ```
 
-### list_issues
+### Running Tests
 
-Get issues for a GitLab project.
-
-Parameters:
-
-- `project_id`: Project ID or URL-encoded path
-- `iid` (optional): Return the issue with the specified internal ID (number or string)
-- `state` (optional): Filter issues by state ('opened', 'closed', 'all')
-- `labels` (optional): Filter issues by labels (comma-separated string)
-- `milestone` (optional): Filter issues by milestone
-- `scope` (optional): Filter issues by scope ('created_by_me', 'assigned_to_me', 'all')
-- `author_id` (optional): Filter issues by author ID
-- `assignee_id` (optional): Filter issues by assignee ID
-- `search` (optional): Search issues by title or description
-- `created_after` (optional): Filter issues created after date (ISO 8601 format)
-- `created_before` (optional): Filter issues created before date (ISO 8601 format)
-- `updated_after` (optional): Filter issues updated after date (ISO 8601 format)
-- `updated_before` (optional): Filter issues updated before date (ISO 8601 format)
-- `order_by` (optional): Order issues by field
-- `sort` (optional): Sort issues in ascending or descending order ('asc' or 'desc')
-- `page` (optional): Page number for pagination
-- `per_page` (optional): Number of results per page (default: 20, max: 100)
-
-Example:
-
-```json
-{
-  "project_id": "my-group/my-project",
-  "state": "opened",
-  "labels": "bug,critical",
-  "created_after": "2025-01-01T00:00:00Z",
-  "order_by": "created_at",
-  "sort": "desc",
-  "per_page": 50
-}
+```bash
+npm test
 ```
 
-Response:
+## License
 
-```json
-{
-  "count": 12,
-  "formatted_issues": [
-    {
-      "iid": 42,
-      "title": "Fix critical login bug",
-      "state": "opened",
-      "author": "John Doe",
-      "assignees": ["Jane Smith"],
-      "labels": ["bug", "critical"],
-      "milestone": "Q1 Release",
-      "created_at": "2025-02-10T09:15:30Z",
-      "updated_at": "2025-02-15T14:22:10Z",
-      "web_url": "https://gitlab.com/my-group/my-project/-/issues/42"
-    }
-    // Additional issues...
-  ],
-  "raw_issues": [
-    // Raw issue data...
-  ]
-}
-```
-
-### list_merge_requests
-
-Get merge requests for a GitLab project.
-
-Parameters:
-
-- `project_id`: Project ID or URL-encoded path
-- `state` (optional): Filter merge requests by state ('opened', 'closed', 'locked', 'merged', 'all')
-- `order_by` (optional): Order merge requests by field ('created_at', 'updated_at')
-- `sort` (optional): Sort merge requests in ascending or descending order ('asc' or 'desc')
-- `milestone` (optional): Filter merge requests by milestone
-- `labels` (optional): Filter merge requests by labels (comma-separated string)
-- `created_after` (optional): Filter merge requests created after date (ISO 8601 format)
-- `created_before` (optional): Filter merge requests created before date (ISO 8601 format)
-- `updated_after` (optional): Filter merge requests updated after date (ISO 8601 format)
-- `updated_before` (optional): Filter merge requests updated before date (ISO 8601 format)
-- `scope` (optional): Filter merge requests by scope ('created_by_me', 'assigned_to_me', 'all')
-- `author_id` (optional): Filter merge requests by author ID
-- `assignee_id` (optional): Filter merge requests by assignee ID
-- `search` (optional): Search merge requests by title or description
-- `source_branch` (optional): Filter merge requests by source branch
-- `target_branch` (optional): Filter merge requests by target branch
-- `wip` (optional): Filter merge requests by WIP status ('yes' or 'no')
-- `page` (optional): Page number for pagination
-- `per_page` (optional): Number of results per page (default: 20, max: 100)
-
-Example:
-
-```json
-{
-  "project_id": "my-group/my-project",
-  "state": "opened",
-  "target_branch": "main",
-  "labels": "feature,ready",
-  "order_by": "updated_at",
-  "sort": "desc",
-  "per_page": 30
-}
-```
-
-Response:
-
-```json
-{
-  "count": 8,
-  "formatted_merge_requests": [
-    {
-      "iid": 15,
-      "title": "Add new authentication feature",
-      "state": "opened",
-      "merged": false,
-      "author": "Jane Smith",
-      "assignees": ["John Doe"],
-      "source_branch": "feature/auth",
-      "target_branch": "main",
-      "created_at": "2025-02-20T11:45:30Z",
-      "updated_at": "2025-02-22T09:30:15Z",
-      "web_url": "https://gitlab.com/my-group/my-project/-/merge_requests/15"
-    }
-    // Additional merge requests...
-  ],
-  "raw_merge_requests": [
-    // Raw merge request data...
-  ]
-}
-```
-
-## Conclusion
-
-This enhanced GitLab MCP Server builds upon the original implementation by adding support for group projects listing and comprehensive activity tracking features. These enhancements provide powerful tools for monitoring project activities, tracking code changes, and managing issues and merge requests. The recent bug fixes ensure better compatibility with GitLab's API and improve the reliability of file operations.
-
-### Use Cases
-
-- **Organization-wide Project Discovery**: Easily list and filter all projects within an organization or group
-- **CI/CD Integration**: Automate operations across multiple repositories within a group
-- **Project Management**: Get a comprehensive view of all projects with filtering options
-- **Activity Monitoring**: Track all activities in a project, including commits, issues, and merge requests
-- **Code Review**: Analyze commit history and changes with detailed filtering
-- **Issue Tracking**: Monitor and filter issues based on various criteria
-- **Merge Request Management**: Track and analyze merge requests with comprehensive filtering
-
-### Future Enhancements
-
-Potential future enhancements could include:
-
-- Group management operations (create/update/delete groups)
-- Group member management
-- Additional filtering options for group projects
-- Support for GitLab subgroups operations
-- Commit diff retrieval and analysis
-- Commit comments and discussions
-- Issue and merge request comments
-- Advanced activity analytics and reporting
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Contributing
 
