@@ -278,6 +278,10 @@ npm run build
 npm test
 ```
 
+<a href="https://glama.ai/mcp/servers/@yoda-digital/mcp-gitlab-server">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/@yoda-digital/mcp-gitlab-server/badge" />
+</a>
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
