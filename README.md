@@ -20,7 +20,7 @@ A Model Context Protocol (MCP) server for GitLab integration, providing tools to
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/mcp-gitlab-server.git
+git clone https://github.com/yoda-digital/mcp-gitlab-server.git
 cd mcp-gitlab-server
 
 # Install dependencies
