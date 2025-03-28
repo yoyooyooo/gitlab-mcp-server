@@ -1,6 +1,6 @@
 # GitLab MCP Server
 
-A Model Context Protocol (MCP) server for GitLab integration, providing tools to interact with GitLab repositories, issues, merge requests, and more.
+A Model Context Protocol (MCP) server for GitLab integration, providing tools to interact with GitLab repositories, issues, merge requests, wikis, and more.
 
 ## Features
 
@@ -15,6 +15,11 @@ A Model Context Protocol (MCP) server for GitLab integration, providing tools to
 - Group projects listing
 - Project events retrieval
 - Commit history access
+- Complete wiki management:
+  - Project wiki support (list, get, create, edit, delete pages)
+  - Group wiki support (list, get, create, edit, delete pages)
+  - Wiki attachment handling
+  - Multiple wiki formats (markdown, rdoc, asciidoc, org)
 
 ## Installation
 
@@ -58,10 +63,7 @@ You can add the GitLab MCP server to your MCP settings file (e.g., `cline_mcp_se
   "mcpServers": {
     "gitlab": {
       "command": "npx",
-      "args": [
-        "-y",
-        "@yoda.digital/gitlab-mcp-server"
-      ],
+      "args": ["-y", "@yoda.digital/gitlab-mcp-server"],
       "env": {
         "GITLAB_PERSONAL_ACCESS_TOKEN": "your_token_here",
         "GITLAB_API_URL": "https://gitlab.com/api/v4"
@@ -111,6 +113,7 @@ The server provides the following tools:
 ### Repository Operations
 
 - `search_repositories`: Search for GitLab projects
+
   ```json
   {
     "search": "project-name",
@@ -120,6 +123,7 @@ The server provides the following tools:
   ```
 
 - `create_repository`: Create a new GitLab project
+
   ```json
   {
     "name": "new-project",
@@ -130,6 +134,7 @@ The server provides the following tools:
   ```
 
 - `fork_repository`: Fork a GitLab project
+
   ```json
   {
     "project_id": "username/project",
@@ -152,6 +157,7 @@ The server provides the following tools:
 ### File Operations
 
 - `get_file_contents`: Get the contents of a file from a GitLab project
+
   ```json
   {
     "project_id": "username/project",
@@ -161,6 +167,7 @@ The server provides the following tools:
   ```
 
 - `create_or_update_file`: Create or update a single file in a GitLab project
+
   ```json
   {
     "project_id": "username/project",
@@ -205,6 +212,7 @@ The server provides the following tools:
 ### Issue Operations
 
 - `create_issue`: Create a new issue in a GitLab project
+
   ```json
   {
     "project_id": "username/project",
@@ -238,6 +246,7 @@ The server provides the following tools:
 ### Merge Request Operations
 
 - `create_merge_request`: Create a new merge request in a GitLab project
+
   ```json
   {
     "project_id": "username/project",
@@ -276,6 +285,7 @@ The server provides the following tools:
 ### Project Activity
 
 - `get_project_events`: Get recent events/activities for a GitLab project
+
   ```json
   {
     "project_id": "username/project",
@@ -302,6 +312,134 @@ The server provides the following tools:
     "first_parent": true,
     "page": 1,
     "per_page": 20
+  }
+  ```
+
+### Project Wiki Operations
+
+- `list_project_wiki_pages`: List all wiki pages for a GitLab project
+
+  ```json
+  {
+    "project_id": "username/project",
+    "with_content": false
+  }
+  ```
+
+- `get_project_wiki_page`: Get a specific wiki page for a GitLab project
+
+  ```json
+  {
+    "project_id": "username/project",
+    "slug": "page-slug",
+    "render_html": false,
+    "version": "commit-sha"
+  }
+  ```
+
+- `create_project_wiki_page`: Create a new wiki page for a GitLab project
+
+  ```json
+  {
+    "project_id": "username/project",
+    "title": "Page Title",
+    "content": "Wiki page content",
+    "format": "markdown"
+  }
+  ```
+
+- `edit_project_wiki_page`: Edit an existing wiki page for a GitLab project
+
+  ```json
+  {
+    "project_id": "username/project",
+    "slug": "page-slug",
+    "title": "New Page Title",
+    "content": "Updated wiki page content",
+    "format": "markdown"
+  }
+  ```
+
+- `delete_project_wiki_page`: Delete a wiki page from a GitLab project
+
+  ```json
+  {
+    "project_id": "username/project",
+    "slug": "page-slug"
+  }
+  ```
+
+- `upload_project_wiki_attachment`: Upload an attachment to a GitLab project wiki
+  ```json
+  {
+    "project_id": "username/project",
+    "file_path": "path/to/attachment.png",
+    "content": "base64-encoded-content",
+    "branch": "main"
+  }
+  ```
+
+### Group Wiki Operations
+
+- `list_group_wiki_pages`: List all wiki pages for a GitLab group
+
+  ```json
+  {
+    "group_id": "group-name",
+    "with_content": false
+  }
+  ```
+
+- `get_group_wiki_page`: Get a specific wiki page for a GitLab group
+
+  ```json
+  {
+    "group_id": "group-name",
+    "slug": "page-slug",
+    "render_html": false,
+    "version": "commit-sha"
+  }
+  ```
+
+- `create_group_wiki_page`: Create a new wiki page for a GitLab group
+
+  ```json
+  {
+    "group_id": "group-name",
+    "title": "Page Title",
+    "content": "Wiki page content",
+    "format": "markdown"
+  }
+  ```
+
+- `edit_group_wiki_page`: Edit an existing wiki page for a GitLab group
+
+  ```json
+  {
+    "group_id": "group-name",
+    "slug": "page-slug",
+    "title": "New Page Title",
+    "content": "Updated wiki page content",
+    "format": "markdown"
+  }
+  ```
+
+- `delete_group_wiki_page`: Delete a wiki page from a GitLab group
+
+  ```json
+  {
+    "group_id": "group-name",
+    "slug": "page-slug"
+  }
+  ```
+
+- `upload_group_wiki_attachment`: Upload an attachment to a GitLab group wiki
+  ```json
+  {
+    "group_id": "group-name",
+    "file_path": "path/to/attachment.png",
+    "content": "base64-encoded-content",
+    "branch": "main"
   }
   ```
 

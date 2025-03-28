@@ -54,3 +54,7 @@ temp/
 
 # npm
 .npm
+.qodo
+
+# Local docs
+implementation/

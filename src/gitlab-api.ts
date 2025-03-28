@@ -17,10 +17,14 @@ import {
   GitLabCommitsResponseSchema,
   GitLabIssuesResponseSchema,
   GitLabMergeRequestsResponseSchema,
+  GitLabWikiPageSchema,
+  GitLabWikiPagesResponseSchema,
+  GitLabWikiAttachmentSchema,
   CreateRepositoryOptionsSchema,
   CreateIssueOptionsSchema,
   CreateMergeRequestOptionsSchema,
   CreateBranchOptionsSchema,
+  WikiPageFormatEnum,
   type GitLabFork,
   type GitLabReference,
   type GitLabRepository,
@@ -36,6 +40,10 @@ import {
   type GitLabCommitsResponse,
   type GitLabIssuesResponse,
   type GitLabMergeRequestsResponse,
+  type GitLabWikiPage,
+  type GitLabWikiPagesResponse,
+  type GitLabWikiAttachment,
+  type WikiPageFormat,
   type FileOperation,
 } from './schemas.js';
 
@@ -795,5 +803,547 @@ export class GitLabApi {
     }
 
     return GitLabRepositorySchema.parse(await response.json());
+  }
+
+  /**
+   * Lists all wiki pages for a GitLab project.
+   *
+   * @param projectId - The ID or URL-encoded path of the project
+   * @param options - Optional parameters for the request
+   * @returns A promise that resolves to the wiki pages response
+   * @throws Will throw an error if the GitLab API request fails
+   */
+  async listProjectWikiPages(
+    projectId: string,
+    options: {
+      with_content?: boolean;
+    } = {}
+  ): Promise<GitLabWikiPagesResponse> {
+    const url = new URL(
+      `${this.apiUrl}/projects/${encodeURIComponent(projectId)}/wikis`
+    );
+
+    // Add query parameters
+    if (options.with_content) {
+      url.searchParams.append("with_content", "true");
+    }
+
+    const response = await fetch(url.toString(), {
+      headers: {
+        Authorization: `Bearer ${this.token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new McpError(
+        ErrorCode.InternalError,
+        `GitLab API error: ${response.statusText}`
+      );
+    }
+
+    // Parse the response JSON
+    const wikiPages = await response.json() as any[];
+
+    // Validate and return the response
+    return GitLabWikiPagesResponseSchema.parse({
+      count: wikiPages.length,
+      items: wikiPages,
+    });
+  }
+
+  /**
+   * Gets a specific wiki page for a GitLab project.
+   *
+   * @param projectId - The ID or URL-encoded path of the project
+   * @param slug - The slug of the wiki page
+   * @param options - Optional parameters for the request
+   * @returns A promise that resolves to the wiki page
+   * @throws Will throw an error if the GitLab API request fails
+   */
+  async getProjectWikiPage(
+    projectId: string,
+    slug: string,
+    options: {
+      render_html?: boolean;
+      version?: string;
+    } = {}
+  ): Promise<GitLabWikiPage> {
+    const url = new URL(
+      `${this.apiUrl}/projects/${encodeURIComponent(projectId)}/wikis/${encodeURIComponent(slug)}`
+    );
+
+    // Add query parameters
+    if (options.render_html) {
+      url.searchParams.append("render_html", "true");
+    }
+    if (options.version) {
+      url.searchParams.append("version", options.version);
+    }
+
+    const response = await fetch(url.toString(), {
+      headers: {
+        Authorization: `Bearer ${this.token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new McpError(
+        ErrorCode.InternalError,
+        `GitLab API error: ${response.statusText}`
+      );
+    }
+
+    // Parse the response JSON
+    const wikiPage = await response.json();
+
+    // Validate and return the response
+    return GitLabWikiPageSchema.parse(wikiPage);
+  }
+
+  /**
+   * Creates a new wiki page for a GitLab project.
+   *
+   * @param projectId - The ID or URL-encoded path of the project
+   * @param options - Options for creating the wiki page
+   * @returns A promise that resolves to the created wiki page
+   * @throws Will throw an error if the GitLab API request fails
+   */
+  async createProjectWikiPage(
+    projectId: string,
+    options: {
+      title: string;
+      content: string;
+      format?: WikiPageFormat;
+    }
+  ): Promise<GitLabWikiPage> {
+    const response = await fetch(
+      `${this.apiUrl}/projects/${encodeURIComponent(projectId)}/wikis`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${this.token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: options.title,
+          content: options.content,
+          format: options.format || "markdown",
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      throw new McpError(
+        ErrorCode.InternalError,
+        `GitLab API error: ${response.statusText}`
+      );
+    }
+
+    // Parse the response JSON
+    const wikiPage = await response.json();
+
+    // Validate and return the response
+    return GitLabWikiPageSchema.parse(wikiPage);
+  }
+
+  /**
+   * Edits an existing wiki page for a GitLab project.
+   *
+   * @param projectId - The ID or URL-encoded path of the project
+   * @param slug - The slug of the wiki page
+   * @param options - Options for editing the wiki page
+   * @returns A promise that resolves to the edited wiki page
+   * @throws Will throw an error if the GitLab API request fails
+   */
+  async editProjectWikiPage(
+    projectId: string,
+    slug: string,
+    options: {
+      title?: string;
+      content?: string;
+      format?: WikiPageFormat;
+    }
+  ): Promise<GitLabWikiPage> {
+    const response = await fetch(
+      `${this.apiUrl}/projects/${encodeURIComponent(projectId)}/wikis/${encodeURIComponent(slug)}`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${this.token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: options.title,
+          content: options.content,
+          format: options.format,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      throw new McpError(
+        ErrorCode.InternalError,
+        `GitLab API error: ${response.statusText}`
+      );
+    }
+
+    // Parse the response JSON
+    const wikiPage = await response.json();
+
+    // Validate and return the response
+    return GitLabWikiPageSchema.parse(wikiPage);
+  }
+
+  /**
+   * Deletes a wiki page from a GitLab project.
+   *
+   * @param projectId - The ID or URL-encoded path of the project
+   * @param slug - The slug of the wiki page
+   * @returns A promise that resolves when the wiki page is deleted
+   * @throws Will throw an error if the GitLab API request fails
+   */
+  async deleteProjectWikiPage(
+    projectId: string,
+    slug: string
+  ): Promise<void> {
+    const response = await fetch(
+      `${this.apiUrl}/projects/${encodeURIComponent(projectId)}/wikis/${encodeURIComponent(slug)}`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${this.token}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new McpError(
+        ErrorCode.InternalError,
+        `GitLab API error: ${response.statusText}`
+      );
+    }
+  }
+
+  /**
+   * Uploads an attachment to a GitLab project wiki.
+   *
+   * @param projectId - The ID or URL-encoded path of the project
+   * @param options - Options for uploading the attachment
+   * @returns A promise that resolves to the uploaded attachment details
+   * @throws Will throw an error if the GitLab API request fails
+   */
+  async uploadProjectWikiAttachment(
+    projectId: string,
+    options: {
+      file_path: string;
+      content: string;
+      branch?: string;
+    }
+  ): Promise<GitLabWikiAttachment> {
+    // Convert content to base64 if it's not already
+    const content = options.content.startsWith("data:")
+      ? options.content
+      : `data:application/octet-stream;base64,${Buffer.from(options.content).toString('base64')}`;
+
+    const response = await fetch(
+      `${this.apiUrl}/projects/${encodeURIComponent(projectId)}/wikis/attachments`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${this.token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          file_name: options.file_path.split('/').pop(),
+          file_path: options.file_path,
+          content: content,
+          branch: options.branch,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      throw new McpError(
+        ErrorCode.InternalError,
+        `GitLab API error: ${response.statusText}`
+      );
+    }
+
+    // Parse the response JSON
+    const attachment = await response.json();
+
+    // Validate and return the response
+    return GitLabWikiAttachmentSchema.parse(attachment);
+  }
+
+  /**
+   * Lists all wiki pages for a GitLab group.
+   *
+   * @param groupId - The ID or URL-encoded path of the group
+   * @param options - Optional parameters for the request
+   * @returns A promise that resolves to the wiki pages response
+   * @throws Will throw an error if the GitLab API request fails
+   */
+  async listGroupWikiPages(
+    groupId: string,
+    options: {
+      with_content?: boolean;
+    } = {}
+  ): Promise<GitLabWikiPagesResponse> {
+    const url = new URL(
+      `${this.apiUrl}/groups/${encodeURIComponent(groupId)}/wikis`
+    );
+
+    // Add query parameters
+    if (options.with_content) {
+      url.searchParams.append("with_content", "true");
+    }
+
+    const response = await fetch(url.toString(), {
+      headers: {
+        Authorization: `Bearer ${this.token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new McpError(
+        ErrorCode.InternalError,
+        `GitLab API error: ${response.statusText}`
+      );
+    }
+
+    // Parse the response JSON
+    const wikiPages = await response.json() as any[];
+
+    // Validate and return the response
+    return GitLabWikiPagesResponseSchema.parse({
+      count: wikiPages.length,
+      items: wikiPages,
+    });
+  }
+
+  /**
+   * Gets a specific wiki page for a GitLab group.
+   *
+   * @param groupId - The ID or URL-encoded path of the group
+   * @param slug - The slug of the wiki page
+   * @param options - Optional parameters for the request
+   * @returns A promise that resolves to the wiki page
+   * @throws Will throw an error if the GitLab API request fails
+   */
+  async getGroupWikiPage(
+    groupId: string,
+    slug: string,
+    options: {
+      render_html?: boolean;
+      version?: string;
+    } = {}
+  ): Promise<GitLabWikiPage> {
+    const url = new URL(
+      `${this.apiUrl}/groups/${encodeURIComponent(groupId)}/wikis/${encodeURIComponent(slug)}`
+    );
+
+    // Add query parameters
+    if (options.render_html) {
+      url.searchParams.append("render_html", "true");
+    }
+    if (options.version) {
+      url.searchParams.append("version", options.version);
+    }
+
+    const response = await fetch(url.toString(), {
+      headers: {
+        Authorization: `Bearer ${this.token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new McpError(
+        ErrorCode.InternalError,
+        `GitLab API error: ${response.statusText}`
+      );
+    }
+
+    // Parse the response JSON
+    const wikiPage = await response.json();
+
+    // Validate and return the response
+    return GitLabWikiPageSchema.parse(wikiPage);
+  }
+
+  /**
+   * Creates a new wiki page for a GitLab group.
+   *
+   * @param groupId - The ID or URL-encoded path of the group
+   * @param options - Options for creating the wiki page
+   * @returns A promise that resolves to the created wiki page
+   * @throws Will throw an error if the GitLab API request fails
+   */
+  async createGroupWikiPage(
+    groupId: string,
+    options: {
+      title: string;
+      content: string;
+      format?: WikiPageFormat;
+    }
+  ): Promise<GitLabWikiPage> {
+    const response = await fetch(
+      `${this.apiUrl}/groups/${encodeURIComponent(groupId)}/wikis`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${this.token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: options.title,
+          content: options.content,
+          format: options.format || "markdown",
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      throw new McpError(
+        ErrorCode.InternalError,
+        `GitLab API error: ${response.statusText}`
+      );
+    }
+
+    // Parse the response JSON
+    const wikiPage = await response.json();
+
+    // Validate and return the response
+    return GitLabWikiPageSchema.parse(wikiPage);
+  }
+
+  /**
+   * Edits an existing wiki page for a GitLab group.
+   *
+   * @param groupId - The ID or URL-encoded path of the group
+   * @param slug - The slug of the wiki page
+   * @param options - Options for editing the wiki page
+   * @returns A promise that resolves to the edited wiki page
+   * @throws Will throw an error if the GitLab API request fails
+   */
+  async editGroupWikiPage(
+    groupId: string,
+    slug: string,
+    options: {
+      title?: string;
+      content?: string;
+      format?: WikiPageFormat;
+    }
+  ): Promise<GitLabWikiPage> {
+    const response = await fetch(
+      `${this.apiUrl}/groups/${encodeURIComponent(groupId)}/wikis/${encodeURIComponent(slug)}`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${this.token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: options.title,
+          content: options.content,
+          format: options.format,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      throw new McpError(
+        ErrorCode.InternalError,
+        `GitLab API error: ${response.statusText}`
+      );
+    }
+
+    // Parse the response JSON
+    const wikiPage = await response.json();
+
+    // Validate and return the response
+    return GitLabWikiPageSchema.parse(wikiPage);
+  }
+
+  /**
+   * Deletes a wiki page from a GitLab group.
+   *
+   * @param groupId - The ID or URL-encoded path of the group
+   * @param slug - The slug of the wiki page
+   * @returns A promise that resolves when the wiki page is deleted
+   * @throws Will throw an error if the GitLab API request fails
+   */
+  async deleteGroupWikiPage(
+    groupId: string,
+    slug: string
+  ): Promise<void> {
+    const response = await fetch(
+      `${this.apiUrl}/groups/${encodeURIComponent(groupId)}/wikis/${encodeURIComponent(slug)}`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${this.token}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new McpError(
+        ErrorCode.InternalError,
+        `GitLab API error: ${response.statusText}`
+      );
+    }
+  }
+
+  /**
+   * Uploads an attachment to a GitLab group wiki.
+   *
+   * @param groupId - The ID or URL-encoded path of the group
+   * @param options - Options for uploading the attachment
+   * @returns A promise that resolves to the uploaded attachment details
+   * @throws Will throw an error if the GitLab API request fails
+   */
+  async uploadGroupWikiAttachment(
+    groupId: string,
+    options: {
+      file_path: string;
+      content: string;
+      branch?: string;
+    }
+  ): Promise<GitLabWikiAttachment> {
+    // Convert content to base64 if it's not already
+    const content = options.content.startsWith("data:")
+      ? options.content
+      : `data:application/octet-stream;base64,${Buffer.from(options.content).toString('base64')}`;
+
+    const response = await fetch(
+      `${this.apiUrl}/groups/${encodeURIComponent(groupId)}/wikis/attachments`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${this.token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          file_name: options.file_path.split('/').pop(),
+          file_path: options.file_path,
+          content: content,
+          branch: options.branch,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      throw new McpError(
+        ErrorCode.InternalError,
+        `GitLab API error: ${response.statusText}`
+      );
+    }
+
+    // Parse the response JSON
+    const attachment = await response.json();
+
+    // Validate and return the response
+    return GitLabWikiAttachmentSchema.parse(attachment);
   }
 }

@@ -25,6 +25,18 @@ import {
   ListCommitsSchema,
   ListIssuesSchema,
   ListMergeRequestsSchema,
+  ListProjectWikiPagesSchema,
+  GetProjectWikiPageSchema,
+  CreateProjectWikiPageSchema,
+  EditProjectWikiPageSchema,
+  DeleteProjectWikiPageSchema,
+  UploadProjectWikiAttachmentSchema,
+  ListGroupWikiPagesSchema,
+  GetGroupWikiPageSchema,
+  CreateGroupWikiPageSchema,
+  EditGroupWikiPageSchema,
+  DeleteGroupWikiPageSchema,
+  UploadGroupWikiAttachmentSchema,
   FileOperationSchema,
 } from './schemas.js';
 import { GitLabApi } from './gitlab-api.js';
@@ -34,6 +46,9 @@ import {
   formatCommitsResponse,
   formatIssuesResponse,
   formatMergeRequestsResponse,
+  formatWikiPagesResponse,
+  formatWikiPageResponse,
+  formatWikiAttachmentResponse,
 } from './formatters.js';
 import { isValidISODate } from './utils.js';
 
@@ -149,6 +164,68 @@ server.setRequestHandler(ListToolsRequestSchema, async (): Promise<ListToolsResu
         name: "list_merge_requests",
         description: "Get merge requests for a GitLab project",
         inputSchema: createJsonSchema(ListMergeRequestsSchema)
+      },
+      // Project Wiki Tools
+      {
+        name: "list_project_wiki_pages",
+        description: "List all wiki pages for a GitLab project",
+        inputSchema: createJsonSchema(ListProjectWikiPagesSchema)
+      },
+      {
+        name: "get_project_wiki_page",
+        description: "Get a specific wiki page for a GitLab project",
+        inputSchema: createJsonSchema(GetProjectWikiPageSchema)
+      },
+      {
+        name: "create_project_wiki_page",
+        description: "Create a new wiki page for a GitLab project",
+        inputSchema: createJsonSchema(CreateProjectWikiPageSchema)
+      },
+      {
+        name: "edit_project_wiki_page",
+        description: "Edit an existing wiki page for a GitLab project",
+        inputSchema: createJsonSchema(EditProjectWikiPageSchema)
+      },
+      {
+        name: "delete_project_wiki_page",
+        description: "Delete a wiki page from a GitLab project",
+        inputSchema: createJsonSchema(DeleteProjectWikiPageSchema)
+      },
+      {
+        name: "upload_project_wiki_attachment",
+        description: "Upload an attachment to a GitLab project wiki",
+        inputSchema: createJsonSchema(UploadProjectWikiAttachmentSchema)
+      },
+      // Group Wiki Tools
+      {
+        name: "list_group_wiki_pages",
+        description: "List all wiki pages for a GitLab group",
+        inputSchema: createJsonSchema(ListGroupWikiPagesSchema)
+      },
+      {
+        name: "get_group_wiki_page",
+        description: "Get a specific wiki page for a GitLab group",
+        inputSchema: createJsonSchema(GetGroupWikiPageSchema)
+      },
+      {
+        name: "create_group_wiki_page",
+        description: "Create a new wiki page for a GitLab group",
+        inputSchema: createJsonSchema(CreateGroupWikiPageSchema)
+      },
+      {
+        name: "edit_group_wiki_page",
+        description: "Edit an existing wiki page for a GitLab group",
+        inputSchema: createJsonSchema(EditGroupWikiPageSchema)
+      },
+      {
+        name: "delete_group_wiki_page",
+        description: "Delete a wiki page from a GitLab group",
+        inputSchema: createJsonSchema(DeleteGroupWikiPageSchema)
+      },
+      {
+        name: "upload_group_wiki_attachment",
+        description: "Upload an attachment to a GitLab group wiki",
+        inputSchema: createJsonSchema(UploadGroupWikiAttachmentSchema)
       }
     ]
   };
@@ -399,6 +476,114 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
 
         // Format and return the response
         return formatMergeRequestsResponse(mergeRequests);
+      }
+
+      // Project Wiki Tools
+      case "list_project_wiki_pages": {
+        const args = ListProjectWikiPagesSchema.parse(request.params.arguments);
+        const wikiPages = await gitlabApi.listProjectWikiPages(args.project_id, {
+          with_content: args.with_content
+        });
+        return formatWikiPagesResponse(wikiPages);
+      }
+
+      case "get_project_wiki_page": {
+        const args = GetProjectWikiPageSchema.parse(request.params.arguments);
+        const wikiPage = await gitlabApi.getProjectWikiPage(args.project_id, args.slug, {
+          render_html: args.render_html,
+          version: args.version
+        });
+        return formatWikiPageResponse(wikiPage);
+      }
+
+      case "create_project_wiki_page": {
+        const args = CreateProjectWikiPageSchema.parse(request.params.arguments);
+        const wikiPage = await gitlabApi.createProjectWikiPage(args.project_id, {
+          title: args.title,
+          content: args.content,
+          format: args.format
+        });
+        return formatWikiPageResponse(wikiPage);
+      }
+
+      case "edit_project_wiki_page": {
+        const args = EditProjectWikiPageSchema.parse(request.params.arguments);
+        const wikiPage = await gitlabApi.editProjectWikiPage(args.project_id, args.slug, {
+          title: args.title,
+          content: args.content,
+          format: args.format
+        });
+        return formatWikiPageResponse(wikiPage);
+      }
+
+      case "delete_project_wiki_page": {
+        const args = DeleteProjectWikiPageSchema.parse(request.params.arguments);
+        await gitlabApi.deleteProjectWikiPage(args.project_id, args.slug);
+        return { content: [{ type: "text", text: `Wiki page '${args.slug}' has been deleted.` }] };
+      }
+
+      case "upload_project_wiki_attachment": {
+        const args = UploadProjectWikiAttachmentSchema.parse(request.params.arguments);
+        const attachment = await gitlabApi.uploadProjectWikiAttachment(args.project_id, {
+          file_path: args.file_path,
+          content: args.content,
+          branch: args.branch
+        });
+        return formatWikiAttachmentResponse(attachment);
+      }
+
+      // Group Wiki Tools
+      case "list_group_wiki_pages": {
+        const args = ListGroupWikiPagesSchema.parse(request.params.arguments);
+        const wikiPages = await gitlabApi.listGroupWikiPages(args.group_id, {
+          with_content: args.with_content
+        });
+        return formatWikiPagesResponse(wikiPages);
+      }
+
+      case "get_group_wiki_page": {
+        const args = GetGroupWikiPageSchema.parse(request.params.arguments);
+        const wikiPage = await gitlabApi.getGroupWikiPage(args.group_id, args.slug, {
+          render_html: args.render_html,
+          version: args.version
+        });
+        return formatWikiPageResponse(wikiPage);
+      }
+
+      case "create_group_wiki_page": {
+        const args = CreateGroupWikiPageSchema.parse(request.params.arguments);
+        const wikiPage = await gitlabApi.createGroupWikiPage(args.group_id, {
+          title: args.title,
+          content: args.content,
+          format: args.format
+        });
+        return formatWikiPageResponse(wikiPage);
+      }
+
+      case "edit_group_wiki_page": {
+        const args = EditGroupWikiPageSchema.parse(request.params.arguments);
+        const wikiPage = await gitlabApi.editGroupWikiPage(args.group_id, args.slug, {
+          title: args.title,
+          content: args.content,
+          format: args.format
+        });
+        return formatWikiPageResponse(wikiPage);
+      }
+
+      case "delete_group_wiki_page": {
+        const args = DeleteGroupWikiPageSchema.parse(request.params.arguments);
+        await gitlabApi.deleteGroupWikiPage(args.group_id, args.slug);
+        return { content: [{ type: "text", text: `Wiki page '${args.slug}' has been deleted.` }] };
+      }
+
+      case "upload_group_wiki_attachment": {
+        const args = UploadGroupWikiAttachmentSchema.parse(request.params.arguments);
+        const attachment = await gitlabApi.uploadGroupWikiAttachment(args.group_id, {
+          file_path: args.file_path,
+          content: args.content,
+          branch: args.branch
+        });
+        return formatWikiAttachmentResponse(attachment);
       }
 
       default:

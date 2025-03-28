@@ -2,7 +2,10 @@ import {
   GitLabEventsResponse,
   GitLabCommitsResponse,
   GitLabIssuesResponse,
-  GitLabMergeRequestsResponse
+  GitLabMergeRequestsResponse,
+  GitLabWikiPagesResponse,
+  GitLabWikiPage,
+  GitLabWikiAttachment
 } from './schemas.js';
 
 /**
@@ -148,6 +151,88 @@ export function formatMergeRequestsResponse(mergeRequests: GitLabMergeRequestsRe
     content: [
       { type: "text", text: summary },
       { type: "text", text: JSON.stringify(formattedMergeRequests, null, 2) }
+    ]
+  };
+}
+
+/**
+ * Formats the wiki pages response for better readability
+ *
+ * @param wikiPages - The GitLab wiki pages response
+ * @returns A formatted response object for the MCP tool
+ */
+export function formatWikiPagesResponse(wikiPages: GitLabWikiPagesResponse) {
+  // Create a summary of the wiki pages
+  const summary = `Found ${wikiPages.count} wiki pages`;
+  
+  // Format the wiki pages data
+  const formattedWikiPages = wikiPages.items.map(page => ({
+    slug: page.slug,
+    title: page.title,
+    format: page.format,
+    content: page.content ? (page.content.length > 100 ? `${page.content.substring(0, 100)}...` : page.content) : null,
+    created_at: page.created_at,
+    updated_at: page.updated_at,
+    web_url: page.web_url
+  }));
+  
+  // Return the formatted response
+  return {
+    content: [
+      { type: "text", text: summary },
+      { type: "text", text: JSON.stringify(formattedWikiPages, null, 2) }
+    ]
+  };
+}
+
+/**
+ * Formats a single wiki page for better readability
+ *
+ * @param wikiPage - The GitLab wiki page
+ * @returns A formatted response object for the MCP tool
+ */
+export function formatWikiPageResponse(wikiPage: GitLabWikiPage) {
+  // Format the wiki page data
+  const formattedWikiPage = {
+    slug: wikiPage.slug,
+    title: wikiPage.title,
+    format: wikiPage.format,
+    content: wikiPage.content,
+    created_at: wikiPage.created_at,
+    updated_at: wikiPage.updated_at,
+    web_url: wikiPage.web_url
+  };
+  
+  // Return the formatted response
+  return {
+    content: [
+      { type: "text", text: `Wiki Page: ${wikiPage.title}` },
+      { type: "text", text: JSON.stringify(formattedWikiPage, null, 2) }
+    ]
+  };
+}
+
+/**
+ * Formats a wiki attachment response for better readability
+ *
+ * @param attachment - The GitLab wiki attachment
+ * @returns A formatted response object for the MCP tool
+ */
+export function formatWikiAttachmentResponse(attachment: GitLabWikiAttachment) {
+  // Format the attachment data
+  const formattedAttachment = {
+    file_name: attachment.file_name,
+    file_path: attachment.file_path,
+    branch: attachment.branch,
+    commit_id: attachment.commit_id,
+    url: attachment.url
+  };
+  
+  // Return the formatted response
+  return {
+    content: [
+      { type: "text", text: `Wiki Attachment: ${attachment.file_name}` },
+      { type: "text", text: JSON.stringify(formattedAttachment, null, 2) }
     ]
   };
 }

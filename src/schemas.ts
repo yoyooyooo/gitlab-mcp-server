@@ -1,5 +1,9 @@
 import { z } from 'zod';
 
+// Wiki Page Format
+export const WikiPageFormatEnum = z.enum(['markdown', 'rdoc', 'asciidoc', 'org']);
+export type WikiPageFormat = z.infer<typeof WikiPageFormatEnum>;
+
 // GitLab User
 export const GitLabUserSchema = z.object({
   id: z.number(),
@@ -267,6 +271,39 @@ export const GitLabEventsResponseSchema = z.object({
 
 export type GitLabEventsResponse = z.infer<typeof GitLabEventsResponseSchema>;
 
+// GitLab Wiki Page
+export const GitLabWikiPageSchema = z.object({
+  slug: z.string(),
+  title: z.string(),
+  format: WikiPageFormatEnum.default('markdown'),
+  content: z.string().optional(),
+  encoding: z.string().optional(),
+  web_url: z.string().optional(),
+  created_at: z.string().optional(),
+  updated_at: z.string().optional()
+});
+
+export type GitLabWikiPage = z.infer<typeof GitLabWikiPageSchema>;
+
+// GitLab Wiki Pages Response
+export const GitLabWikiPagesResponseSchema = z.object({
+  count: z.number(),
+  items: z.array(GitLabWikiPageSchema)
+});
+
+export type GitLabWikiPagesResponse = z.infer<typeof GitLabWikiPagesResponseSchema>;
+
+// GitLab Wiki Attachment
+export const GitLabWikiAttachmentSchema = z.object({
+  file_name: z.string(),
+  file_path: z.string(),
+  branch: z.string(),
+  commit_id: z.string(),
+  url: z.string().optional()
+});
+
+export type GitLabWikiAttachment = z.infer<typeof GitLabWikiAttachmentSchema>;
+
 // File Operation
 export const FileOperationSchema = z.object({
   path: z.string(),
@@ -432,4 +469,83 @@ export const ListMergeRequestsSchema = z.object({
   wip: z.enum(['yes', 'no']).optional(),
   page: z.number().optional(),
   per_page: z.number().optional()
+});
+
+// Wiki Tool Input Schemas
+export const ListProjectWikiPagesSchema = z.object({
+  project_id: z.string(),
+  with_content: z.boolean().optional()
+});
+
+export const GetProjectWikiPageSchema = z.object({
+  project_id: z.string(),
+  slug: z.string(),
+  render_html: z.boolean().optional(),
+  version: z.string().optional()
+});
+
+export const CreateProjectWikiPageSchema = z.object({
+  project_id: z.string(),
+  title: z.string(),
+  content: z.string(),
+  format: WikiPageFormatEnum.optional()
+});
+
+export const EditProjectWikiPageSchema = z.object({
+  project_id: z.string(),
+  slug: z.string(),
+  title: z.string().optional(),
+  content: z.string().optional(),
+  format: WikiPageFormatEnum.optional()
+});
+
+export const DeleteProjectWikiPageSchema = z.object({
+  project_id: z.string(),
+  slug: z.string()
+});
+
+export const UploadProjectWikiAttachmentSchema = z.object({
+  project_id: z.string(),
+  file_path: z.string(),
+  content: z.string(),
+  branch: z.string().optional()
+});
+
+export const ListGroupWikiPagesSchema = z.object({
+  group_id: z.string(),
+  with_content: z.boolean().optional()
+});
+
+export const GetGroupWikiPageSchema = z.object({
+  group_id: z.string(),
+  slug: z.string(),
+  render_html: z.boolean().optional(),
+  version: z.string().optional()
+});
+
+export const CreateGroupWikiPageSchema = z.object({
+  group_id: z.string(),
+  title: z.string(),
+  content: z.string(),
+  format: WikiPageFormatEnum.optional()
+});
+
+export const EditGroupWikiPageSchema = z.object({
+  group_id: z.string(),
+  slug: z.string(),
+  title: z.string().optional(),
+  content: z.string().optional(),
+  format: WikiPageFormatEnum.optional()
+});
+
+export const DeleteGroupWikiPageSchema = z.object({
+  group_id: z.string(),
+  slug: z.string()
+});
+
+export const UploadGroupWikiAttachmentSchema = z.object({
+  group_id: z.string(),
+  file_path: z.string(),
+  content: z.string(),
+  branch: z.string().optional()
 });
