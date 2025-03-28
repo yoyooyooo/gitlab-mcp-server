@@ -1,3 +1,9 @@
+## Changes from Push on 2025-03-28
+
+### Features
+* add wiki page formatting functions and update version to 0.2.5 (nalyk, 2025-03-28)
+
+
 ## Changes from Push on 2025-03-24
 
 ### Features
@@ -20,5 +26,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Other
 * Merge branch 'main' of github.com:yoda-digital/mcp-gitlab-server (nalyk, 2025-03-24)
 * Merge branch 'main' of github.com:yoda-digital/mcp-gitlab-server (nalyk, 2025-03-24)
-
-
