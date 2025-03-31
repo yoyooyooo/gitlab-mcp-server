@@ -84,10 +84,13 @@ const gitlabApi = new GitLabApi({
 
 // Helper function to convert Zod schema to JSON schema with proper type
 function createJsonSchema(schema: z.ZodType<any>) {
-  // Create a simple object schema with the correct type
+  // Convert the schema using zodToJsonSchema
+  const jsonSchema = zodToJsonSchema(schema);
+  
+  // Ensure we return an object with the expected structure
   return {
     type: "object" as const,
-    properties: {}
+    properties: (jsonSchema as any).properties || {}
   };
 }
 

@@ -1,3 +1,8 @@
+## Changes from Push on 2025-03-31
+
+### Fixes
+* fix tool description display in stdio mode by properly converting Zod schemas to JSON Schema (2025-03-31)
+
 ## Changes from Push on 2025-03-28
 
 ### Features
