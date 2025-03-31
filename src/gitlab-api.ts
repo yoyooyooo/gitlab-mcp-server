@@ -20,6 +20,7 @@ import {
   GitLabWikiPageSchema,
   GitLabWikiPagesResponseSchema,
   GitLabWikiAttachmentSchema,
+  GitLabMemberSchema,
   CreateRepositoryOptionsSchema,
   CreateIssueOptionsSchema,
   CreateMergeRequestOptionsSchema,
@@ -45,6 +46,7 @@ import {
   type GitLabWikiAttachment,
   type WikiPageFormat,
   type FileOperation,
+  type GitLabMember,
 } from './schemas.js';
 
 /**
@@ -196,7 +198,7 @@ export class GitLabApi {
     }
 
     const data = GitLabContentSchema.parse(await response.json());
-    
+
     if (!Array.isArray(data) && data.content) {
       data.content = Buffer.from(data.content, 'base64').toString('utf8');
     }
@@ -376,7 +378,7 @@ export class GitLabApi {
     } = {}
   ): Promise<GitLabGroupProjectsResponse> {
     const url = new URL(`${this.apiUrl}/groups/${encodeURIComponent(groupId)}/projects`);
-    
+
     // Add query parameters
     Object.entries(options).forEach(([key, value]) => {
       if (value !== undefined) {
@@ -399,7 +401,7 @@ export class GitLabApi {
 
     const projects = await response.json();
     const totalCount = parseInt(response.headers.get("X-Total") || "0");
-    
+
     return GitLabGroupProjectsResponseSchema.parse({
       count: totalCount,
       items: projects
@@ -748,7 +750,7 @@ export class GitLabApi {
     }
 
     const responseData = await response.json() as Record<string, any>;
-    
+
     return {
       id: responseData.id,
       iid: responseData.iid,
@@ -1345,5 +1347,93 @@ export class GitLabApi {
 
     // Validate and return the response
     return GitLabWikiAttachmentSchema.parse(attachment);
+  }
+
+  /**
+   * Lists members of a GitLab project (including inherited members).
+   *
+   * @param projectId - The ID or URL-encoded path of the project
+   * @param options - Options for listing members
+   * @returns A promise that resolves to the list of project members
+   * @throws Will throw an error if the GitLab API request fails
+   */
+  async listProjectMembers(
+    projectId: string,
+    options: {
+      query?: string;
+      page?: number;
+      per_page?: number;
+    } = {}
+  ): Promise<GitLabMember[]> {
+    const url = new URL(
+      `${this.apiUrl}/projects/${encodeURIComponent(projectId)}/members/all`
+    );
+
+    // Add query parameters
+    Object.entries(options).forEach(([key, value]) => {
+      if (value !== undefined) {
+        url.searchParams.append(key, value.toString());
+      }
+    });
+
+    const response = await fetch(url.toString(), {
+      headers: {
+        "Authorization": `Bearer ${this.token}`
+      }
+    });
+
+    if (!response.ok) {
+      throw new McpError(
+        ErrorCode.InternalError,
+        `GitLab API error: ${response.statusText}`
+      );
+    }
+
+    const data = await response.json();
+    return z.array(GitLabMemberSchema).parse(data);
+  }
+
+  /**
+   * Lists members of a GitLab group (including inherited members).
+   *
+   * @param groupId - The ID or URL-encoded path of the group
+   * @param options - Options for listing members
+   * @returns A promise that resolves to the list of group members
+   * @throws Will throw an error if the GitLab API request fails
+   */
+  async listGroupMembers(
+    groupId: string,
+    options: {
+      query?: string;
+      page?: number;
+      per_page?: number;
+    } = {}
+  ): Promise<GitLabMember[]> {
+    const url = new URL(
+      `${this.apiUrl}/groups/${encodeURIComponent(groupId)}/members/all`
+    );
+
+    // Add query parameters
+    Object.entries(options).forEach(([key, value]) => {
+      if (value !== undefined) {
+        url.searchParams.append(key, value.toString());
+      }
+    });
+
+    const response = await fetch(url.toString(), {
+      headers: {
+        "Authorization": `Bearer ${this.token}`
+      }
+    });
+
+    if (!response.ok) {
+      throw new McpError(
+        ErrorCode.InternalError,
+        `GitLab API error: ${response.statusText}`
+      );
+    }
+
+    const data = await response.json();
+    return z.array(GitLabMemberSchema).parse(data);
   }
 }
