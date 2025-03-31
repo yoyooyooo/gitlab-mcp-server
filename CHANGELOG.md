@@ -2,6 +2,8 @@
 
 ### Fixes
 * fix tool description display in stdio mode by properly converting Zod schemas to JSON Schema (2025-03-31)
+* update tool description display in stdio mode (fixes #2 , thanks to @thomasleveil) and bump version to 0.2.6 (nalyk, 2025-03-31)
+
 
 ## Changes from Push on 2025-03-28
 
