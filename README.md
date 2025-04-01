@@ -490,6 +490,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
+## Contributors
+
+Thanks to all the contributors who have helped improve this project:
+
+- [thomasleveil](https://github.com/thomasleveil) - Implemented GitLab member listing functionality for projects and groups
+
 ## NPM Package
 
 This package is available on npm:
