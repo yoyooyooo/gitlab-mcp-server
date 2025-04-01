@@ -37,6 +37,8 @@ import {
   EditGroupWikiPageSchema,
   DeleteGroupWikiPageSchema,
   UploadGroupWikiAttachmentSchema,
+  ListProjectMembersSchema,
+  ListGroupMembersSchema,
   FileOperationSchema,
 } from './schemas.js';
 import { GitLabApi } from './gitlab-api.js';
@@ -86,7 +88,7 @@ const gitlabApi = new GitLabApi({
 function createJsonSchema(schema: z.ZodType<any>) {
   // Convert the schema using zodToJsonSchema
   const jsonSchema = zodToJsonSchema(schema);
-  
+
   // Ensure we return an object with the expected structure
   return {
     type: "object" as const,
@@ -229,7 +231,18 @@ server.setRequestHandler(ListToolsRequestSchema, async (): Promise<ListToolsResu
         name: "upload_group_wiki_attachment",
         description: "Upload an attachment to a GitLab group wiki",
         inputSchema: createJsonSchema(UploadGroupWikiAttachmentSchema)
-      }
+      },
+      // Member Tools
+      {
+        name: "list_project_members",
+        description: "List all members of a GitLab project (including inherited members)",
+        inputSchema: createJsonSchema(ListProjectMembersSchema)
+      },
+      {
+        name: "list_group_members",
+        description: "List all members of a GitLab group (including inherited members)",
+        inputSchema: createJsonSchema(ListGroupMembersSchema)
+      },
     ]
   };
 });
@@ -295,7 +308,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
 
       case "push_files": {
         const args = PushFilesSchema.parse(request.params.arguments);
-        
+
         // Use individual file creation for each file instead of batch commit
         const results = [];
         for (const file of args.files) {
@@ -313,7 +326,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
             throw error;
           }
         }
-        
+
         return { content: [{ type: "text", text: JSON.stringify(results, null, 2) }] };
       }
 
@@ -587,6 +600,20 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
           branch: args.branch
         });
         return formatWikiAttachmentResponse(attachment);
+      }
+
+      case "list_project_members": {
+        const args = ListProjectMembersSchema.parse(request.params.arguments);
+        const { project_id, ...options } = args;
+        const members = await gitlabApi.listProjectMembers(project_id, options);
+        return { content: [{ type: "text", text: JSON.stringify(members, null, 2) }] };
+      }
+
+      case "list_group_members": {
+        const args = ListGroupMembersSchema.parse(request.params.arguments);
+        const { group_id, ...options } = args;
+        const members = await gitlabApi.listGroupMembers(group_id, options);
+        return { content: [{ type: "text", text: JSON.stringify(members, null, 2) }] };
       }
 
       default:

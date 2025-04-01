@@ -15,6 +15,7 @@ A Model Context Protocol (MCP) server for GitLab integration, providing tools to
 - Group projects listing
 - Project events retrieval
 - Commit history access
+- Member management (list project and group members)
 - Complete wiki management:
   - Project wiki support (list, get, create, edit, delete pages)
   - Group wiki support (list, get, create, edit, delete pages)
@@ -310,6 +311,30 @@ The server provides the following tools:
     "all": true,
     "with_stats": true,
     "first_parent": true,
+    "page": 1,
+    "per_page": 20
+  }
+  ```
+
+### Member Operations
+
+- `list_project_members`: List all members of a GitLab project (including inherited members)
+
+  ```json
+  {
+    "project_id": "username/project",
+    "query": "search term",
+    "page": 1,
+    "per_page": 20
+  }
+  ```
+
+- `list_group_members`: List all members of a GitLab group (including inherited members)
+
+  ```json
+  {
+    "group_id": "group-name",
+    "query": "search term",
     "page": 1,
     "per_page": 20
   }

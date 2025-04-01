@@ -549,3 +549,31 @@ export const UploadGroupWikiAttachmentSchema = z.object({
   content: z.string(),
   branch: z.string().optional()
 });
+
+export const ListProjectMembersSchema = z.object({
+  project_id: z.string(),
+  query: z.string().optional(),
+  page: z.number().optional(),
+  per_page: z.number().optional(),
+});
+
+export const ListGroupMembersSchema = z.object({
+  group_id: z.string(),
+  query: z.string().optional(),
+  page: z.number().optional(),
+  per_page: z.number().optional(),
+});
+
+export const GitLabMemberSchema = z.object({
+  id: z.number(),
+  username: z.string(),
+  name: z.string(),
+  state: z.string(),
+  avatar_url: z.string().optional(),
+  web_url: z.string(),
+  access_level: z.number(),
+  access_level_description: z.string().optional(),
+  expires_at: z.string().nullable(),
+});
+
+export type GitLabMember = z.infer<typeof GitLabMemberSchema>; 
