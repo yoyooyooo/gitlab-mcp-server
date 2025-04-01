@@ -576,4 +576,12 @@ export const GitLabMemberSchema = z.object({
   expires_at: z.string().nullable(),
 });
 
-export type GitLabMember = z.infer<typeof GitLabMemberSchema>; 
+export type GitLabMember = z.infer<typeof GitLabMemberSchema>;
+
+// GitLab Member Response
+export const GitLabMembersResponseSchema = z.object({
+  count: z.number(),
+  items: z.array(GitLabMemberSchema)
+});
+
+export type GitLabMembersResponse = z.infer<typeof GitLabMembersResponseSchema>; 
