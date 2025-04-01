@@ -1,3 +1,12 @@
+## Changes from Push on 2025-04-01
+
+### Features
+* implement GitLab member listing for projects and groups (Thomas, 2025-03-31)
+
+### Other
+* Merge PR #3: Implement GitLab member listing for projects and groups (Ion (Nalyk) Calmîș, 2025-04-01)
+
+
 ## Changes from Push on 2025-03-31
 
 ### Fixes
