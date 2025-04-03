@@ -5,7 +5,8 @@ import {
   GitLabMergeRequestsResponse,
   GitLabWikiPagesResponse,
   GitLabWikiPage,
-  GitLabWikiAttachment
+  GitLabWikiAttachment,
+  GitLabMembersResponse
 } from './schemas.js';
 
 /**
@@ -17,7 +18,7 @@ import {
 export function formatEventsResponse(events: GitLabEventsResponse) {
   // Create a summary of the events
   const summary = `Found ${events.count} events`;
-  
+
   // Format the events data
   const formattedEvents = events.items.map(event => ({
     id: event.id,
@@ -28,7 +29,7 @@ export function formatEventsResponse(events: GitLabEventsResponse) {
     target_title: event.target_title || null,
     push_data: event.push_data || null
   }));
-  
+
   // Return the formatted response
   return {
     content: [
@@ -47,7 +48,7 @@ export function formatEventsResponse(events: GitLabEventsResponse) {
 export function formatCommitsResponse(commits: GitLabCommitsResponse) {
   // Create a summary of the commits
   const summary = `Found ${commits.count} commits`;
-  
+
   // Format the commits data
   const formattedCommits = commits.items.map(commit => ({
     id: commit.id,
@@ -60,7 +61,7 @@ export function formatCommitsResponse(commits: GitLabCommitsResponse) {
     web_url: commit.web_url,
     stats: commit.stats
   }));
-  
+
   // Return the formatted response
   return {
     content: [
@@ -79,7 +80,7 @@ export function formatCommitsResponse(commits: GitLabCommitsResponse) {
 export function formatIssuesResponse(issues: GitLabIssuesResponse) {
   // Create a summary of the issues
   const summary = `Found ${issues.count} issues`;
-  
+
   // Format the issues data
   const formattedIssues = issues.items.map(issue => ({
     id: issue.id,
@@ -101,7 +102,7 @@ export function formatIssuesResponse(issues: GitLabIssuesResponse) {
     })),
     web_url: issue.web_url
   }));
-  
+
   // Return the formatted response
   return {
     content: [
@@ -120,7 +121,7 @@ export function formatIssuesResponse(issues: GitLabIssuesResponse) {
 export function formatMergeRequestsResponse(mergeRequests: GitLabMergeRequestsResponse) {
   // Create a summary of the merge requests
   const summary = `Found ${mergeRequests.count} merge requests`;
-  
+
   // Format the merge requests data
   const formattedMergeRequests = mergeRequests.items.map(mr => ({
     id: mr.id,
@@ -145,7 +146,7 @@ export function formatMergeRequestsResponse(mergeRequests: GitLabMergeRequestsRe
     })),
     web_url: mr.web_url
   }));
-  
+
   // Return the formatted response
   return {
     content: [
@@ -164,7 +165,7 @@ export function formatMergeRequestsResponse(mergeRequests: GitLabMergeRequestsRe
 export function formatWikiPagesResponse(wikiPages: GitLabWikiPagesResponse) {
   // Create a summary of the wiki pages
   const summary = `Found ${wikiPages.count} wiki pages`;
-  
+
   // Format the wiki pages data
   const formattedWikiPages = wikiPages.items.map(page => ({
     slug: page.slug,
@@ -175,7 +176,7 @@ export function formatWikiPagesResponse(wikiPages: GitLabWikiPagesResponse) {
     updated_at: page.updated_at,
     web_url: page.web_url
   }));
-  
+
   // Return the formatted response
   return {
     content: [
@@ -202,7 +203,7 @@ export function formatWikiPageResponse(wikiPage: GitLabWikiPage) {
     updated_at: wikiPage.updated_at,
     web_url: wikiPage.web_url
   };
-  
+
   // Return the formatted response
   return {
     content: [
@@ -227,12 +228,44 @@ export function formatWikiAttachmentResponse(attachment: GitLabWikiAttachment) {
     commit_id: attachment.commit_id,
     url: attachment.url
   };
-  
+
   // Return the formatted response
   return {
     content: [
       { type: "text", text: `Wiki Attachment: ${attachment.file_name}` },
       { type: "text", text: JSON.stringify(formattedAttachment, null, 2) }
+    ]
+  };
+}
+
+/**
+ * Formats the members response for better readability
+ * 
+ * @param members - The GitLab members response
+ * @returns A formatted response object for the MCP tool
+ */
+export function formatMembersResponse(members: GitLabMembersResponse) {
+  // Create a summary of the members
+  const summary = `Found ${members.count} members`;
+
+  // Format the members data
+  const formattedMembers = members.items.map(member => ({
+    id: member.id,
+    username: member.username,
+    name: member.name,
+    state: member.state,
+    avatar_url: member.avatar_url,
+    web_url: member.web_url,
+    access_level: member.access_level,
+    access_level_description: member.access_level_description,
+    expires_at: member.expires_at
+  }));
+
+  // Return the formatted response
+  return {
+    content: [
+      { type: "text", text: summary },
+      { type: "text", text: JSON.stringify(formattedMembers, null, 2) }
     ]
   };
 }

@@ -51,6 +51,7 @@ import {
   formatWikiPagesResponse,
   formatWikiPageResponse,
   formatWikiAttachmentResponse,
+  formatMembersResponse
 } from './formatters.js';
 import { isValidISODate } from './utils.js';
 
@@ -606,14 +607,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
         const args = ListProjectMembersSchema.parse(request.params.arguments);
         const { project_id, ...options } = args;
         const members = await gitlabApi.listProjectMembers(project_id, options);
-        return { content: [{ type: "text", text: JSON.stringify(members, null, 2) }] };
+        return formatMembersResponse(members);
       }
 
       case "list_group_members": {
         const args = ListGroupMembersSchema.parse(request.params.arguments);
         const { group_id, ...options } = args;
         const members = await gitlabApi.listGroupMembers(group_id, options);
-        return { content: [{ type: "text", text: JSON.stringify(members, null, 2) }] };
+        return formatMembersResponse(members);
       }
 
       default:

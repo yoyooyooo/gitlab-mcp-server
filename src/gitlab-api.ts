@@ -47,6 +47,8 @@ import {
   type WikiPageFormat,
   type FileOperation,
   type GitLabMember,
+  GitLabMembersResponseSchema,
+  type GitLabMembersResponse,
 } from './schemas.js';
 
 /**
@@ -1354,7 +1356,7 @@ export class GitLabApi {
    *
    * @param projectId - The ID or URL-encoded path of the project
    * @param options - Options for listing members
-   * @returns A promise that resolves to the list of project members
+   * @returns A promise that resolves to the members response
    * @throws Will throw an error if the GitLab API request fails
    */
   async listProjectMembers(
@@ -1364,7 +1366,7 @@ export class GitLabApi {
       page?: number;
       per_page?: number;
     } = {}
-  ): Promise<GitLabMember[]> {
+  ): Promise<GitLabMembersResponse> {
     const url = new URL(
       `${this.apiUrl}/projects/${encodeURIComponent(projectId)}/members/all`
     );
@@ -1390,7 +1392,12 @@ export class GitLabApi {
     }
 
     const data = await response.json();
-    return z.array(GitLabMemberSchema).parse(data);
+    const totalCount = parseInt(response.headers.get("X-Total") || "0");
+
+    return GitLabMembersResponseSchema.parse({
+      count: totalCount,
+      items: data
+    });
   }
 
   /**
@@ -1398,7 +1405,7 @@ export class GitLabApi {
    *
    * @param groupId - The ID or URL-encoded path of the group
    * @param options - Options for listing members
-   * @returns A promise that resolves to the list of group members
+   * @returns A promise that resolves to the members response
    * @throws Will throw an error if the GitLab API request fails
    */
   async listGroupMembers(
@@ -1408,7 +1415,7 @@ export class GitLabApi {
       page?: number;
       per_page?: number;
     } = {}
-  ): Promise<GitLabMember[]> {
+  ): Promise<GitLabMembersResponse> {
     const url = new URL(
       `${this.apiUrl}/groups/${encodeURIComponent(groupId)}/members/all`
     );
@@ -1434,6 +1441,11 @@ export class GitLabApi {
     }
 
     const data = await response.json();
-    return z.array(GitLabMemberSchema).parse(data);
+    const totalCount = parseInt(response.headers.get("X-Total") || "0");
+
+    return GitLabMembersResponseSchema.parse({
+      count: totalCount,
+      items: data
+    });
   }
 }
