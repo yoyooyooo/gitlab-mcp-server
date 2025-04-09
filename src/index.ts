@@ -40,6 +40,8 @@ import {
   ListProjectMembersSchema,
   ListGroupMembersSchema,
   FileOperationSchema,
+  ListIssueNotesSchema,
+  ListIssueDiscussionsSchema,
 } from './schemas.js';
 import { GitLabApi } from './gitlab-api.js';
 import { setupTransport } from './transport.js';
@@ -51,7 +53,9 @@ import {
   formatWikiPagesResponse,
   formatWikiPageResponse,
   formatWikiAttachmentResponse,
-  formatMembersResponse
+  formatMembersResponse,
+  formatNotesResponse,
+  formatDiscussionsResponse
 } from './formatters.js';
 import { isValidISODate } from './utils.js';
 
@@ -269,6 +273,19 @@ const ALL_TOOLS = [
     name: "list_group_members",
     description: "List all members of a GitLab group (including inherited members)",
     inputSchema: createJsonSchema(ListGroupMembersSchema),
+    readOnly: true
+  },
+  // Issue Notes Tools
+  {
+    name: "list_issue_notes",
+    description: "Fetch all comments and system notes for a GitLab issue",
+    inputSchema: createJsonSchema(ListIssueNotesSchema),
+    readOnly: true
+  },
+  {
+    name: "list_issue_discussions",
+    description: "Fetch all discussions (threaded comments) for a GitLab issue",
+    inputSchema: createJsonSchema(ListIssueDiscussionsSchema),
     readOnly: true
   },
 ];
@@ -664,6 +681,62 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
         const { group_id, ...options } = args;
         const members = await gitlabApi.listGroupMembers(group_id, options);
         return formatMembersResponse(members);
+      }
+
+      case "list_issue_notes": {
+        // Parse and validate the arguments
+        const args = ListIssueNotesSchema.parse(request.params.arguments);
+
+        // Additional validation for pagination parameters
+        if (args.per_page && (args.per_page < 1 || args.per_page > 100)) {
+          throw new Error("per_page must be between 1 and 100");
+        }
+
+        if (args.page && args.page < 1) {
+          throw new Error("page must be greater than 0");
+        }
+
+        // Call the API function
+        const notes = await gitlabApi.getIssueNotes(
+          args.project_id,
+          args.issue_iid,
+          {
+            sort: args.sort,
+            order_by: args.order_by,
+            page: args.page,
+            per_page: args.per_page
+          }
+        );
+
+        // Format and return the response
+        return formatNotesResponse(notes);
+      }
+
+      case "list_issue_discussions": {
+        // Parse and validate the arguments
+        const args = ListIssueDiscussionsSchema.parse(request.params.arguments);
+
+        // Additional validation for pagination parameters
+        if (args.per_page && (args.per_page < 1 || args.per_page > 100)) {
+          throw new Error("per_page must be between 1 and 100");
+        }
+
+        if (args.page && args.page < 1) {
+          throw new Error("page must be greater than 0");
+        }
+
+        // Call the API function
+        const discussions = await gitlabApi.getIssueDiscussions(
+          args.project_id,
+          args.issue_iid,
+          {
+            page: args.page,
+            per_page: args.per_page
+          }
+        );
+
+        // Format and return the response
+        return formatDiscussionsResponse(discussions);
       }
 
       default:

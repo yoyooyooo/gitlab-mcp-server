@@ -11,9 +11,6 @@
   <a href="https://github.com/yoda-digital/mcp-gitlab-server/blob/main/LICENSE">
     <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg">
   </a>
-  <a href="https://github.com/yoda-digital/mcp-gitlab-server/actions">
-    <img alt="CI Status" src="https://github.com/yoda-digital/mcp-gitlab-server/actions/workflows/ci.yml/badge.svg">
-  </a>
   <a href="https://github.com/yoda-digital/mcp-gitlab-server/issues">
     <img alt="GitHub issues" src="https://img.shields.io/github/issues/yoda-digital/mcp-gitlab-server">
   </a>
@@ -341,6 +338,135 @@ GITLAB_PERSONAL_ACCESS_TOKEN=your_token_here npx @yoda.digital/gitlab-mcp-server
   "updated_before": "2023-06-30T23:59:59Z",
   "page": 1,
   "per_page": 20
+}
+```
+
+</details>
+
+<details>
+<summary><b>list_issue_notes</b>: Get all comments and system notes for a GitLab issue</summary>
+
+```json
+{
+  "project_id": "username/project",
+  "issue_iid": 42,
+  "sort": "desc",
+  "order_by": "created_at",
+  "page": 1,
+  "per_page": 20
+}
+```
+
+**Response Format:**
+
+```json
+{
+  "count": 15,
+  "notes": [
+    {
+      "id": 123456,
+      "body": "This is a comment on the issue",
+      "author": {
+        "id": 1,
+        "username": "username",
+        "name": "User Name"
+      },
+      "created_at": "2023-01-01T00:00:00Z",
+      "updated_at": "2023-01-01T00:00:00Z",
+      "system": false,
+      "type": "comment"
+    },
+    {
+      "id": 123457,
+      "body": "added label ~bug",
+      "author": {
+        "id": 1,
+        "username": "username",
+        "name": "User Name"
+      },
+      "created_at": "2023-01-02T00:00:00Z",
+      "updated_at": "2023-01-02T00:00:00Z",
+      "system": true,
+      "type": "system"
+    }
+    // ... other notes
+  ]
+}
+```
+
+</details>
+
+<details>
+<summary><b>list_issue_discussions</b>: Get all discussions (threaded comments) for a GitLab issue</summary>
+
+```json
+{
+  "project_id": "username/project",
+  "issue_iid": 42,
+  "page": 1,
+  "per_page": 20
+}
+```
+
+**Response Format:**
+
+```json
+{
+  "count": 5,
+  "discussions": [
+    {
+      "id": "discussion-123",
+      "individual_note": true,
+      "notes": [
+        {
+          "id": 123456,
+          "body": "This is a comment on the issue",
+          "author": {
+            "id": 1,
+            "username": "username",
+            "name": "User Name"
+          },
+          "created_at": "2023-01-01T00:00:00Z",
+          "updated_at": "2023-01-01T00:00:00Z",
+          "system": false,
+          "type": "comment"
+        }
+      ]
+    },
+    {
+      "id": "discussion-124",
+      "individual_note": false,
+      "notes": [
+        {
+          "id": 123457,
+          "body": "This is a thread starter",
+          "author": {
+            "id": 1,
+            "username": "username",
+            "name": "User Name"
+          },
+          "created_at": "2023-01-02T00:00:00Z",
+          "updated_at": "2023-01-02T00:00:00Z",
+          "system": false,
+          "type": "comment"
+        },
+        {
+          "id": 123458,
+          "body": "This is a reply in the thread",
+          "author": {
+            "id": 2,
+            "username": "username2",
+            "name": "User Name 2"
+          },
+          "created_at": "2023-01-03T00:00:00Z",
+          "updated_at": "2023-01-03T00:00:00Z",
+          "system": false,
+          "type": "comment"
+        }
+      ]
+    }
+    // ... other discussions
+  ]
 }
 ```
 

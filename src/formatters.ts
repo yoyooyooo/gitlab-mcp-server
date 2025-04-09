@@ -6,7 +6,9 @@ import {
   GitLabWikiPagesResponse,
   GitLabWikiPage,
   GitLabWikiAttachment,
-  GitLabMembersResponse
+  GitLabMembersResponse,
+  GitLabNotesResponse,
+  GitLabDiscussionsResponse
 } from './schemas.js';
 
 /**
@@ -266,6 +268,76 @@ export function formatMembersResponse(members: GitLabMembersResponse) {
     content: [
       { type: "text", text: summary },
       { type: "text", text: JSON.stringify(formattedMembers, null, 2) }
+    ]
+  };
+}
+
+/**
+ * Formats the issue notes response for better readability
+ *
+ * @param notes - The GitLab notes response
+ * @returns A formatted response object for the MCP tool
+ */
+export function formatNotesResponse(notes: GitLabNotesResponse) {
+  // Create a summary of the notes
+  const summary = `Found ${notes.count} notes`;
+
+  // Format the notes data
+  const formattedNotes = notes.items.map(note => ({
+    id: note.id,
+    body: note.body,
+    author: {
+      name: note.author.name,
+      username: note.author.username
+    },
+    created_at: note.created_at,
+    updated_at: note.updated_at,
+    system: note.system,
+    type: note.type || (note.system ? "system" : "comment")
+  }));
+
+  // Return the formatted response
+  return {
+    content: [
+      { type: "text", text: summary },
+      { type: "text", text: JSON.stringify(formattedNotes, null, 2) }
+    ]
+  };
+}
+
+/**
+ * Formats the issue discussions response for better readability
+ *
+ * @param discussions - The GitLab discussions response
+ * @returns A formatted response object for the MCP tool
+ */
+export function formatDiscussionsResponse(discussions: GitLabDiscussionsResponse) {
+  // Create a summary of the discussions
+  const summary = `Found ${discussions.count} discussions`;
+
+  // Format the discussions data
+  const formattedDiscussions = discussions.items.map(discussion => ({
+    id: discussion.id,
+    individual_note: discussion.individual_note,
+    notes: discussion.notes.map(note => ({
+      id: note.id,
+      body: note.body,
+      author: {
+        name: note.author.name,
+        username: note.author.username
+      },
+      created_at: note.created_at,
+      updated_at: note.updated_at,
+      system: note.system,
+      type: note.type || (note.system ? "system" : "comment")
+    }))
+  }));
+
+  // Return the formatted response
+  return {
+    content: [
+      { type: "text", text: summary },
+      { type: "text", text: JSON.stringify(formattedDiscussions, null, 2) }
     ]
   };
 }

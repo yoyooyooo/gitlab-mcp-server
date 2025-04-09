@@ -4,6 +4,52 @@ import { z } from 'zod';
 export const WikiPageFormatEnum = z.enum(['markdown', 'rdoc', 'asciidoc', 'org']);
 export type WikiPageFormat = z.infer<typeof WikiPageFormatEnum>;
 
+// GitLab Note
+export const GitLabNoteSchema = z.object({
+  id: z.number(),
+  body: z.string(),
+  attachment: z.any().nullable(),
+  author: z.lazy(() => GitLabUserSchema),
+  created_at: z.string(),
+  updated_at: z.string(),
+  system: z.boolean(),
+  noteable_id: z.number(),
+  noteable_type: z.string(),
+  noteable_iid: z.number().optional(),
+  resolvable: z.boolean().optional(),
+  confidential: z.boolean().optional(),
+  internal: z.boolean().optional(),
+  type: z.string().nullable().optional(), // For system notes, indicates the type of change
+  url: z.string().optional(),
+});
+
+export type GitLabNote = z.infer<typeof GitLabNoteSchema>;
+
+// GitLab Notes Response
+export const GitLabNotesResponseSchema = z.object({
+  count: z.number(),
+  items: z.array(GitLabNoteSchema),
+});
+
+export type GitLabNotesResponse = z.infer<typeof GitLabNotesResponseSchema>;
+
+// GitLab Discussion
+export const GitLabDiscussionSchema = z.object({
+  id: z.string(),
+  individual_note: z.boolean(),
+  notes: z.array(GitLabNoteSchema),
+});
+
+export type GitLabDiscussion = z.infer<typeof GitLabDiscussionSchema>;
+
+// GitLab Discussions Response
+export const GitLabDiscussionsResponseSchema = z.object({
+  count: z.number(),
+  items: z.array(GitLabDiscussionSchema),
+});
+
+export type GitLabDiscussionsResponse = z.infer<typeof GitLabDiscussionsResponseSchema>;
+
 // GitLab User
 export const GitLabUserSchema = z.object({
   id: z.number(),
@@ -584,4 +630,21 @@ export const GitLabMembersResponseSchema = z.object({
   items: z.array(GitLabMemberSchema)
 });
 
-export type GitLabMembersResponse = z.infer<typeof GitLabMembersResponseSchema>; 
+export type GitLabMembersResponse = z.infer<typeof GitLabMembersResponseSchema>;
+
+// Issue Notes Tool Input Schemas
+export const ListIssueNotesSchema = z.object({
+  project_id: z.string(),
+  issue_iid: z.number(),
+  sort: z.enum(["asc", "desc"]).optional(),
+  order_by: z.enum(["created_at", "updated_at"]).optional(),
+  page: z.number().optional(),
+  per_page: z.number().optional(),
+});
+
+export const ListIssueDiscussionsSchema = z.object({
+  project_id: z.string(),
+  issue_iid: z.number(),
+  page: z.number().optional(),
+  per_page: z.number().optional(),
+});

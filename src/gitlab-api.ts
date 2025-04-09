@@ -49,6 +49,10 @@ import {
   type GitLabMember,
   GitLabMembersResponseSchema,
   type GitLabMembersResponse,
+  GitLabNotesResponseSchema,
+  type GitLabNotesResponse,
+  GitLabDiscussionsResponseSchema,
+  type GitLabDiscussionsResponse,
 } from './schemas.js';
 
 /**
@@ -1446,6 +1450,136 @@ export class GitLabApi {
     return GitLabMembersResponseSchema.parse({
       count: totalCount,
       items: data
+    });
+  }
+
+  /**
+   * Retrieves notes for a GitLab issue.
+   *
+   * @param projectId - The ID or URL-encoded path of the project
+   * @param issueIid - The internal ID of the issue
+   * @param options - Optional parameters for filtering and pagination
+   * @returns A promise that resolves to the notes response
+   * @throws Will throw an error if the GitLab API request fails
+   */
+  async getIssueNotes(
+    projectId: string,
+    issueIid: number,
+    options: {
+      sort?: "asc" | "desc";
+      order_by?: "created_at" | "updated_at";
+      page?: number;
+      per_page?: number;
+    } = {}
+  ): Promise<GitLabNotesResponse> {
+    const url = new URL(
+      `${this.apiUrl}/projects/${encodeURIComponent(projectId)}/issues/${issueIid}/notes`
+    );
+
+    // Add query parameters for filtering and pagination
+    Object.entries(options).forEach(([key, value]) => {
+      if (value !== undefined) {
+        url.searchParams.append(key, value.toString());
+      }
+    });
+
+    const response = await fetch(url.toString(), {
+      headers: {
+        Authorization: `Bearer ${this.token}`,
+      },
+    });
+
+    if (!response.ok) {
+      let errorMessage = `GitLab API error: ${response.statusText}`;
+      
+      if (response.status === 404) {
+        errorMessage = `Issue not found: Project ID ${projectId}, Issue IID ${issueIid}`;
+      } else if (response.status === 403) {
+        errorMessage = `Permission denied to access issue notes`;
+      } else if (response.status === 429) {
+        errorMessage = `GitLab API rate limit exceeded`;
+      }
+      
+      throw new McpError(
+        ErrorCode.InternalError,
+        errorMessage
+      );
+    }
+
+    // Parse the response JSON
+    const notes = await response.json();
+
+    // Get the total count from the headers
+    const totalCount = parseInt(response.headers.get("X-Total") || "0");
+
+    // Validate and return the response
+    return GitLabNotesResponseSchema.parse({
+      count: totalCount,
+      items: notes,
+    });
+  }
+
+  /**
+   * Retrieves discussions for a GitLab issue.
+   *
+   * @param projectId - The ID or URL-encoded path of the project
+   * @param issueIid - The internal ID of the issue
+   * @param options - Optional parameters for pagination
+   * @returns A promise that resolves to the discussions response
+   * @throws Will throw an error if the GitLab API request fails
+   */
+  async getIssueDiscussions(
+    projectId: string,
+    issueIid: number,
+    options: {
+      page?: number;
+      per_page?: number;
+    } = {}
+  ): Promise<GitLabDiscussionsResponse> {
+    const url = new URL(
+      `${this.apiUrl}/projects/${encodeURIComponent(projectId)}/issues/${issueIid}/discussions`
+    );
+
+    // Add query parameters for pagination
+    Object.entries(options).forEach(([key, value]) => {
+      if (value !== undefined) {
+        url.searchParams.append(key, value.toString());
+      }
+    });
+
+    const response = await fetch(url.toString(), {
+      headers: {
+        Authorization: `Bearer ${this.token}`,
+      },
+    });
+
+    if (!response.ok) {
+      let errorMessage = `GitLab API error: ${response.statusText}`;
+      
+      if (response.status === 404) {
+        errorMessage = `Issue not found: Project ID ${projectId}, Issue IID ${issueIid}`;
+      } else if (response.status === 403) {
+        errorMessage = `Permission denied to access issue discussions`;
+      } else if (response.status === 429) {
+        errorMessage = `GitLab API rate limit exceeded`;
+      }
+      
+      throw new McpError(
+        ErrorCode.InternalError,
+        errorMessage
+      );
+    }
+
+    // Parse the response JSON
+    const discussions = await response.json();
+
+    // Get the total count from the headers
+    const totalCount = parseInt(response.headers.get("X-Total") || "0");
+
+    // Validate and return the response
+    return GitLabDiscussionsResponseSchema.parse({
+      count: totalCount,
+      items: discussions,
     });
   }
 }
