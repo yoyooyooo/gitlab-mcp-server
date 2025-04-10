@@ -1,8 +1,8 @@
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
-import express from "express";
-import cors from "cors";
+import { createServer, IncomingMessage, ServerResponse } from "http";
+import { parse } from "url";
 
 /**
  * Transport configuration options
@@ -33,67 +33,68 @@ export async function setupTransport(
   const { port = 3000, useSSE = false } = options;
 
   if (useSSE) {
-    // Set up SSE transport
-    const app = express();
-    
-    // Enable CORS for all routes
-    app.use(cors());
-    
-    // Parse JSON request bodies
-    app.use(express.json());
+    // Create an object to store active SSE transports by session ID
+    const transports: { [sessionId: string]: SSEServerTransport } = {};
 
-    // Create a map to store active SSE transports by session ID
-    const transports = new Map<string, SSEServerTransport>();
+    // Create raw HTTP server
+    const httpServer = createServer(async (req: IncomingMessage, res: ServerResponse) => {
+      // Enable CORS
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-    // SSE endpoint
-    app.get("/sse", (req, res) => {
-      res.setHeader("Content-Type", "text/event-stream");
-      res.setHeader("Cache-Control", "no-cache");
-      res.setHeader("Connection", "keep-alive");
-      
-      // Create a new SSE transport
-      const transport = new SSEServerTransport("/messages", res);
-      
-      // Store the transport by session ID
-      transports.set(transport.sessionId, transport);
-      
-      // Connect the server to the transport
-      server.connect(transport).catch(error => {
-        console.error("Error connecting server to SSE transport:", error);
-      });
-      
-      // Clean up when the connection is closed
-      res.on("close", () => {
-        transports.delete(transport.sessionId);
-      });
-    });
-
-    // Message endpoint for client-to-server communication
-    app.post("/messages", async (req, res) => {
-      const sessionId = req.query.sessionId as string;
-      
-      if (!sessionId) {
-        res.status(400).json({ error: "Missing sessionId parameter" });
+      if (req.method === 'OPTIONS') {
+        res.writeHead(204);
+        res.end();
         return;
       }
-      
-      const transport = transports.get(sessionId);
-      
-      if (!transport) {
-        res.status(404).json({ error: "Session not found" });
-        return;
-      }
-      
+
+      const { pathname, query } = parse(req.url || '', true);
+
       try {
-        await transport.handlePostMessage(req, res);
+        if (req.method === 'GET' && pathname === '/sse') {
+          // Create a new SSE transport
+          const transport = new SSEServerTransport("/messages", res);
+          
+          // Store the transport by session ID
+          transports[transport.sessionId] = transport;
+          
+          // Set up cleanup handler
+          req.on("close", () => {
+            delete transports[transport.sessionId];
+          });
+
+          // Connect the server to the transport
+          await server.connect(transport);
+        }
+        else if (req.method === 'POST' && pathname === '/messages') {
+          const sessionId = query.sessionId as string;
+          const transport = transports[sessionId];
+          
+          if (!transport) {
+            res.writeHead(400);
+            res.end('No transport found for sessionId');
+            return;
+          }
+
+          // Pass the raw Node.js request to the transport
+          await transport.handlePostMessage(req, res);
+        }
+        else {
+          res.writeHead(404);
+          res.end();
+        }
       } catch (error) {
-        console.error("Error handling message:", error);
-        res.status(500).json({ error: "Internal server error" });
+        console.error('Server error:', error);
+        if (!res.headersSent) {
+          res.writeHead(500);
+          res.end('Internal server error');
+        }
       }
     });
 
     // Start the server
-    app.listen(port, () => {
+    httpServer.listen(port, () => {
       console.error(`SSE server listening on port ${port}`);
     });
   } else {
