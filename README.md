@@ -5,8 +5,8 @@
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@yoda.digital/gitlab-mcp-server">
-    <img alt="npm" src="https://img.shields.io/npm/v/@yoda.digital/gitlab-mcp-server?color=blue">
+  <a href="https://www.npmjs.com/package/@yoyo/gitlab-mcp-server">
+    <img alt="npm" src="https://img.shields.io/npm/v/@yoyo/gitlab-mcp-server?color=blue">
   </a>
   <a href="https://github.com/yoda-digital/mcp-gitlab-server/blob/main/LICENSE">
     <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg">
@@ -50,7 +50,7 @@
 #### From npm (Recommended)
 
 ```bash
-npm install @yoda.digital/gitlab-mcp-server
+npm install @yoyo/gitlab-mcp-server
 ```
 
 #### From Source
@@ -110,7 +110,7 @@ Add the GitLab MCP server to your MCP settings file:
   "mcpServers": {
     "gitlab": {
       "command": "npx",
-      "args": ["-y", "@yoda.digital/gitlab-mcp-server"],
+      "args": ["-y", "@yoyo/gitlab-mcp-server"],
       "env": {
         "GITLAB_PERSONAL_ACCESS_TOKEN": "your_token_here",
         "GITLAB_API_URL": "https://gitlab.com/api/v4"
@@ -129,7 +129,7 @@ For read-only mode, add the `GITLAB_READ_ONLY_MODE` environment variable:
   "mcpServers": {
     "gitlab-readonly": {
       "command": "npx",
-      "args": ["-y", "@yoda.digital/gitlab-mcp-server"],
+      "args": ["-y", "@yoyo/gitlab-mcp-server"],
       "env": {
         "GITLAB_PERSONAL_ACCESS_TOKEN": "your_token_here",
         "GITLAB_API_URL": "https://gitlab.com/api/v4",
@@ -171,7 +171,7 @@ npm start
 
 ```bash
 # Run directly with npx
-GITLAB_PERSONAL_ACCESS_TOKEN=your_token_here npx @yoda.digital/gitlab-mcp-server
+GITLAB_PERSONAL_ACCESS_TOKEN=your_token_here npx @yoyo/gitlab-mcp-server
 ```
 
 ## 🛠️ Available Tools
@@ -878,5 +878,5 @@ Special thanks to:
 
 ## 📦 NPM Package
 
-This package is available on npm:  
-[https://www.npmjs.com/package/@yoda.digital/gitlab-mcp-server](https://www.npmjs.com/package/@yoda.digital/gitlab-mcp-server)
+This package is available on npm:
+[https://www.npmjs.com/package/@yoyo/gitlab-mcp-server](https://www.npmjs.com/package/@yoyo/gitlab-mcp-server)

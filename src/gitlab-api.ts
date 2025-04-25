@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 import fetch from "node-fetch";
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import {
@@ -53,7 +53,7 @@ import {
   type GitLabNotesResponse,
   GitLabDiscussionsResponseSchema,
   type GitLabDiscussionsResponse,
-} from './schemas.js';
+} from "./schemas.js";
 
 /**
  * GitLab API client configuration
@@ -88,14 +88,16 @@ export class GitLabApi {
     namespace?: string
   ): Promise<GitLabFork> {
     const url = `${this.apiUrl}/projects/${encodeURIComponent(projectId)}/fork`;
-    const queryParams = namespace ? `?namespace=${encodeURIComponent(namespace)}` : '';
+    const queryParams = namespace
+      ? `?namespace=${encodeURIComponent(namespace)}`
+      : "";
 
     const response = await fetch(url + queryParams, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${this.token}`,
-        "Content-Type": "application/json"
-      }
+        Authorization: `Bearer ${this.token}`,
+        "Content-Type": "application/json",
+      },
     });
 
     if (!response.ok) {
@@ -121,17 +123,19 @@ export class GitLabApi {
     options: z.infer<typeof CreateBranchOptionsSchema>
   ): Promise<GitLabReference> {
     const response = await fetch(
-      `${this.apiUrl}/projects/${encodeURIComponent(projectId)}/repository/branches`,
+      `${this.apiUrl}/projects/${encodeURIComponent(
+        projectId
+      )}/repository/branches`,
       {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${this.token}`,
-          "Content-Type": "application/json"
+          Authorization: `Bearer ${this.token}`,
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           branch: options.name,
-          ref: options.ref
-        })
+          ref: options.ref,
+        }),
       }
     );
 
@@ -157,8 +161,8 @@ export class GitLabApi {
       `${this.apiUrl}/projects/${encodeURIComponent(projectId)}`,
       {
         headers: {
-          "Authorization": `Bearer ${this.token}`
-        }
+          Authorization: `Bearer ${this.token}`,
+        },
       }
     );
 
@@ -188,12 +192,14 @@ export class GitLabApi {
     ref: string
   ): Promise<GitLabContent> {
     const encodedPath = encodeURIComponent(filePath);
-    const url = `${this.apiUrl}/projects/${encodeURIComponent(projectId)}/repository/files/${encodedPath}?ref=${encodeURIComponent(ref)}`;
+    const url = `${this.apiUrl}/projects/${encodeURIComponent(
+      projectId
+    )}/repository/files/${encodedPath}?ref=${encodeURIComponent(ref)}`;
 
     const response = await fetch(url, {
       headers: {
-        "Authorization": `Bearer ${this.token}`
-      }
+        Authorization: `Bearer ${this.token}`,
+      },
     });
 
     if (!response.ok) {
@@ -206,7 +212,7 @@ export class GitLabApi {
     const data = GitLabContentSchema.parse(await response.json());
 
     if (!Array.isArray(data) && data.content) {
-      data.content = Buffer.from(data.content, 'base64').toString('utf8');
+      data.content = Buffer.from(data.content, "base64").toString("utf8");
     }
 
     return data;
@@ -233,13 +239,15 @@ export class GitLabApi {
     previousPath?: string
   ): Promise<GitLabCreateUpdateFileResponse> {
     const encodedPath = encodeURIComponent(filePath);
-    const url = `${this.apiUrl}/projects/${encodeURIComponent(projectId)}/repository/files/${encodedPath}`;
+    const url = `${this.apiUrl}/projects/${encodeURIComponent(
+      projectId
+    )}/repository/files/${encodedPath}`;
 
     const body = {
       branch,
       content,
       commit_message: commitMessage,
-      ...(previousPath ? { previous_path: previousPath } : {})
+      ...(previousPath ? { previous_path: previousPath } : {}),
     };
 
     // Check if file exists
@@ -254,10 +262,10 @@ export class GitLabApi {
     const response = await fetch(url, {
       method,
       headers: {
-        "Authorization": `Bearer ${this.token}`,
-        "Content-Type": "application/json"
+        Authorization: `Bearer ${this.token}`,
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
     });
 
     if (!response.ok) {
@@ -267,12 +275,12 @@ export class GitLabApi {
       );
     }
 
-    const responseData = await response.json() as Record<string, any>;
+    const responseData = (await response.json()) as Record<string, any>;
     return {
       file_path: filePath,
       branch: branch,
       commit_id: responseData.commit_id || responseData.id || "unknown",
-      content: responseData.content
+      content: responseData.content,
     };
   }
 
@@ -293,22 +301,24 @@ export class GitLabApi {
     actions: FileOperation[]
   ): Promise<GitLabCommit> {
     const response = await fetch(
-      `${this.apiUrl}/projects/${encodeURIComponent(projectId)}/repository/commits`,
+      `${this.apiUrl}/projects/${encodeURIComponent(
+        projectId
+      )}/repository/commits`,
       {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${this.token}`,
-          "Content-Type": "application/json"
+          Authorization: `Bearer ${this.token}`,
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           branch,
           commit_message: message,
-          actions: actions.map(action => ({
+          actions: actions.map((action) => ({
             action: "create",
             file_path: action.path,
-            content: action.content
-          }))
-        })
+            content: action.content,
+          })),
+        }),
       }
     );
 
@@ -343,8 +353,8 @@ export class GitLabApi {
 
     const response = await fetch(url.toString(), {
       headers: {
-        "Authorization": `Bearer ${this.token}`
-      }
+        Authorization: `Bearer ${this.token}`,
+      },
     });
 
     if (!response.ok) {
@@ -357,7 +367,7 @@ export class GitLabApi {
     const projects = await response.json();
     return GitLabSearchResponseSchema.parse({
       count: parseInt(response.headers.get("X-Total") || "0"),
-      items: projects
+      items: projects,
     });
   }
 
@@ -373,9 +383,15 @@ export class GitLabApi {
     groupId: string,
     options: {
       archived?: boolean;
-      visibility?: 'public' | 'internal' | 'private';
-      order_by?: 'id' | 'name' | 'path' | 'created_at' | 'updated_at' | 'last_activity_at';
-      sort?: 'asc' | 'desc';
+      visibility?: "public" | "internal" | "private";
+      order_by?:
+        | "id"
+        | "name"
+        | "path"
+        | "created_at"
+        | "updated_at"
+        | "last_activity_at";
+      sort?: "asc" | "desc";
       search?: string;
       simple?: boolean;
       include_subgroups?: boolean;
@@ -383,7 +399,9 @@ export class GitLabApi {
       per_page?: number;
     } = {}
   ): Promise<GitLabGroupProjectsResponse> {
-    const url = new URL(`${this.apiUrl}/groups/${encodeURIComponent(groupId)}/projects`);
+    const url = new URL(
+      `${this.apiUrl}/groups/${encodeURIComponent(groupId)}/projects`
+    );
 
     // Add query parameters
     Object.entries(options).forEach(([key, value]) => {
@@ -394,8 +412,8 @@ export class GitLabApi {
 
     const response = await fetch(url.toString(), {
       headers: {
-        "Authorization": `Bearer ${this.token}`
-      }
+        Authorization: `Bearer ${this.token}`,
+      },
     });
 
     if (!response.ok) {
@@ -410,7 +428,7 @@ export class GitLabApi {
 
     return GitLabGroupProjectsResponseSchema.parse({
       count: totalCount,
-      items: projects
+      items: projects,
     });
   }
 
@@ -482,6 +500,7 @@ export class GitLabApi {
   async listCommits(
     projectId: string,
     options: {
+      ref_name?: string;
       sha?: string;
       since?: string;
       until?: string;
@@ -491,7 +510,7 @@ export class GitLabApi {
       first_parent?: boolean;
       page?: number;
       per_page?: number;
-    } = {}
+    } = { per_page: 10, page: 1 }
   ): Promise<GitLabCommitsResponse> {
     const url = new URL(
       `${this.apiUrl}/projects/${encodeURIComponent(
@@ -590,15 +609,19 @@ export class GitLabApi {
     }
 
     // Parse the response JSON
-    const issues = await response.json() as any[];
+    const issues = (await response.json()) as any[];
 
     // If iid is provided, filter the issues by iid
-    const filteredIssues = iid !== undefined
-      ? issues.filter(issue => issue.iid?.toString() === iid.toString())
-      : issues;
+    const filteredIssues =
+      iid !== undefined
+        ? issues.filter((issue) => issue.iid?.toString() === iid.toString())
+        : issues;
 
     // Get the total count - if filtered, use the filtered length
-    const totalCount = iid !== undefined ? filteredIssues.length : parseInt(response.headers.get("X-Total") || "0");
+    const totalCount =
+      iid !== undefined
+        ? filteredIssues.length
+        : parseInt(response.headers.get("X-Total") || "0");
 
     // Validate and return the response
     return GitLabIssuesResponseSchema.parse({
@@ -639,9 +662,7 @@ export class GitLabApi {
     } = {}
   ): Promise<GitLabMergeRequestsResponse> {
     const url = new URL(
-      `${this.apiUrl}/projects/${encodeURIComponent(
-        projectId
-      )}/merge_requests`
+      `${this.apiUrl}/projects/${encodeURIComponent(projectId)}/merge_requests`
     );
 
     // Add all query parameters
@@ -694,16 +715,16 @@ export class GitLabApi {
       {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${this.token}`,
-          "Content-Type": "application/json"
+          Authorization: `Bearer ${this.token}`,
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           title: options.title,
           description: options.description,
           assignee_ids: options.assignee_ids,
           milestone_id: options.milestone_id,
-          labels: options.labels?.join(',')
-        })
+          labels: options.labels?.join(","),
+        }),
       }
     );
 
@@ -734,8 +755,8 @@ export class GitLabApi {
       {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${this.token}`,
-          "Content-Type": "application/json"
+          Authorization: `Bearer ${this.token}`,
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           title: options.title,
@@ -743,8 +764,8 @@ export class GitLabApi {
           source_branch: options.source_branch,
           target_branch: options.target_branch,
           allow_collaboration: options.allow_collaboration,
-          draft: options.draft
-        })
+          draft: options.draft,
+        }),
       }
     );
 
@@ -755,7 +776,7 @@ export class GitLabApi {
       );
     }
 
-    const responseData = await response.json() as Record<string, any>;
+    const responseData = (await response.json()) as Record<string, any>;
 
     return {
       id: responseData.id,
@@ -775,7 +796,7 @@ export class GitLabApi {
       updated_at: responseData.updated_at,
       merged_at: responseData.merged_at,
       closed_at: responseData.closed_at,
-      merge_commit_sha: responseData.merge_commit_sha
+      merge_commit_sha: responseData.merge_commit_sha,
     };
   }
 
@@ -792,15 +813,15 @@ export class GitLabApi {
     const response = await fetch(`${this.apiUrl}/projects`, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${this.token}`,
-        "Content-Type": "application/json"
+        Authorization: `Bearer ${this.token}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         name: options.name,
         description: options.description,
         visibility: options.visibility,
-        initialize_with_readme: options.initialize_with_readme
-      })
+        initialize_with_readme: options.initialize_with_readme,
+      }),
     });
 
     if (!response.ok) {
@@ -850,7 +871,7 @@ export class GitLabApi {
     }
 
     // Parse the response JSON
-    const wikiPages = await response.json() as any[];
+    const wikiPages = (await response.json()) as any[];
 
     // Validate and return the response
     return GitLabWikiPagesResponseSchema.parse({
@@ -877,7 +898,9 @@ export class GitLabApi {
     } = {}
   ): Promise<GitLabWikiPage> {
     const url = new URL(
-      `${this.apiUrl}/projects/${encodeURIComponent(projectId)}/wikis/${encodeURIComponent(slug)}`
+      `${this.apiUrl}/projects/${encodeURIComponent(
+        projectId
+      )}/wikis/${encodeURIComponent(slug)}`
     );
 
     // Add query parameters
@@ -973,7 +996,9 @@ export class GitLabApi {
     }
   ): Promise<GitLabWikiPage> {
     const response = await fetch(
-      `${this.apiUrl}/projects/${encodeURIComponent(projectId)}/wikis/${encodeURIComponent(slug)}`,
+      `${this.apiUrl}/projects/${encodeURIComponent(
+        projectId
+      )}/wikis/${encodeURIComponent(slug)}`,
       {
         method: "PUT",
         headers: {
@@ -1010,12 +1035,11 @@ export class GitLabApi {
    * @returns A promise that resolves when the wiki page is deleted
    * @throws Will throw an error if the GitLab API request fails
    */
-  async deleteProjectWikiPage(
-    projectId: string,
-    slug: string
-  ): Promise<void> {
+  async deleteProjectWikiPage(projectId: string, slug: string): Promise<void> {
     const response = await fetch(
-      `${this.apiUrl}/projects/${encodeURIComponent(projectId)}/wikis/${encodeURIComponent(slug)}`,
+      `${this.apiUrl}/projects/${encodeURIComponent(
+        projectId
+      )}/wikis/${encodeURIComponent(slug)}`,
       {
         method: "DELETE",
         headers: {
@@ -1051,10 +1075,14 @@ export class GitLabApi {
     // Convert content to base64 if it's not already
     const content = options.content.startsWith("data:")
       ? options.content
-      : `data:application/octet-stream;base64,${Buffer.from(options.content).toString('base64')}`;
+      : `data:application/octet-stream;base64,${Buffer.from(
+          options.content
+        ).toString("base64")}`;
 
     const response = await fetch(
-      `${this.apiUrl}/projects/${encodeURIComponent(projectId)}/wikis/attachments`,
+      `${this.apiUrl}/projects/${encodeURIComponent(
+        projectId
+      )}/wikis/attachments`,
       {
         method: "POST",
         headers: {
@@ -1062,7 +1090,7 @@ export class GitLabApi {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          file_name: options.file_path.split('/').pop(),
+          file_name: options.file_path.split("/").pop(),
           file_path: options.file_path,
           content: content,
           branch: options.branch,
@@ -1121,7 +1149,7 @@ export class GitLabApi {
     }
 
     // Parse the response JSON
-    const wikiPages = await response.json() as any[];
+    const wikiPages = (await response.json()) as any[];
 
     // Validate and return the response
     return GitLabWikiPagesResponseSchema.parse({
@@ -1148,7 +1176,9 @@ export class GitLabApi {
     } = {}
   ): Promise<GitLabWikiPage> {
     const url = new URL(
-      `${this.apiUrl}/groups/${encodeURIComponent(groupId)}/wikis/${encodeURIComponent(slug)}`
+      `${this.apiUrl}/groups/${encodeURIComponent(
+        groupId
+      )}/wikis/${encodeURIComponent(slug)}`
     );
 
     // Add query parameters
@@ -1244,7 +1274,9 @@ export class GitLabApi {
     }
   ): Promise<GitLabWikiPage> {
     const response = await fetch(
-      `${this.apiUrl}/groups/${encodeURIComponent(groupId)}/wikis/${encodeURIComponent(slug)}`,
+      `${this.apiUrl}/groups/${encodeURIComponent(
+        groupId
+      )}/wikis/${encodeURIComponent(slug)}`,
       {
         method: "PUT",
         headers: {
@@ -1281,12 +1313,11 @@ export class GitLabApi {
    * @returns A promise that resolves when the wiki page is deleted
    * @throws Will throw an error if the GitLab API request fails
    */
-  async deleteGroupWikiPage(
-    groupId: string,
-    slug: string
-  ): Promise<void> {
+  async deleteGroupWikiPage(groupId: string, slug: string): Promise<void> {
     const response = await fetch(
-      `${this.apiUrl}/groups/${encodeURIComponent(groupId)}/wikis/${encodeURIComponent(slug)}`,
+      `${this.apiUrl}/groups/${encodeURIComponent(
+        groupId
+      )}/wikis/${encodeURIComponent(slug)}`,
       {
         method: "DELETE",
         headers: {
@@ -1322,7 +1353,9 @@ export class GitLabApi {
     // Convert content to base64 if it's not already
     const content = options.content.startsWith("data:")
       ? options.content
-      : `data:application/octet-stream;base64,${Buffer.from(options.content).toString('base64')}`;
+      : `data:application/octet-stream;base64,${Buffer.from(
+          options.content
+        ).toString("base64")}`;
 
     const response = await fetch(
       `${this.apiUrl}/groups/${encodeURIComponent(groupId)}/wikis/attachments`,
@@ -1333,7 +1366,7 @@ export class GitLabApi {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          file_name: options.file_path.split('/').pop(),
+          file_name: options.file_path.split("/").pop(),
           file_path: options.file_path,
           content: content,
           branch: options.branch,
@@ -1384,8 +1417,8 @@ export class GitLabApi {
 
     const response = await fetch(url.toString(), {
       headers: {
-        "Authorization": `Bearer ${this.token}`
-      }
+        Authorization: `Bearer ${this.token}`,
+      },
     });
 
     if (!response.ok) {
@@ -1400,7 +1433,7 @@ export class GitLabApi {
 
     return GitLabMembersResponseSchema.parse({
       count: totalCount,
-      items: data
+      items: data,
     });
   }
 
@@ -1433,8 +1466,8 @@ export class GitLabApi {
 
     const response = await fetch(url.toString(), {
       headers: {
-        "Authorization": `Bearer ${this.token}`
-      }
+        Authorization: `Bearer ${this.token}`,
+      },
     });
 
     if (!response.ok) {
@@ -1449,7 +1482,7 @@ export class GitLabApi {
 
     return GitLabMembersResponseSchema.parse({
       count: totalCount,
-      items: data
+      items: data,
     });
   }
 
@@ -1473,7 +1506,9 @@ export class GitLabApi {
     } = {}
   ): Promise<GitLabNotesResponse> {
     const url = new URL(
-      `${this.apiUrl}/projects/${encodeURIComponent(projectId)}/issues/${issueIid}/notes`
+      `${this.apiUrl}/projects/${encodeURIComponent(
+        projectId
+      )}/issues/${issueIid}/notes`
     );
 
     // Add query parameters for filtering and pagination
@@ -1491,7 +1526,7 @@ export class GitLabApi {
 
     if (!response.ok) {
       let errorMessage = `GitLab API error: ${response.statusText}`;
-      
+
       if (response.status === 404) {
         errorMessage = `Issue not found: Project ID ${projectId}, Issue IID ${issueIid}`;
       } else if (response.status === 403) {
@@ -1499,11 +1534,8 @@ export class GitLabApi {
       } else if (response.status === 429) {
         errorMessage = `GitLab API rate limit exceeded`;
       }
-      
-      throw new McpError(
-        ErrorCode.InternalError,
-        errorMessage
-      );
+
+      throw new McpError(ErrorCode.InternalError, errorMessage);
     }
 
     // Parse the response JSON
@@ -1537,7 +1569,9 @@ export class GitLabApi {
     } = {}
   ): Promise<GitLabDiscussionsResponse> {
     const url = new URL(
-      `${this.apiUrl}/projects/${encodeURIComponent(projectId)}/issues/${issueIid}/discussions`
+      `${this.apiUrl}/projects/${encodeURIComponent(
+        projectId
+      )}/issues/${issueIid}/discussions`
     );
 
     // Add query parameters for pagination
@@ -1555,7 +1589,7 @@ export class GitLabApi {
 
     if (!response.ok) {
       let errorMessage = `GitLab API error: ${response.statusText}`;
-      
+
       if (response.status === 404) {
         errorMessage = `Issue not found: Project ID ${projectId}, Issue IID ${issueIid}`;
       } else if (response.status === 403) {
@@ -1563,11 +1597,8 @@ export class GitLabApi {
       } else if (response.status === 429) {
         errorMessage = `GitLab API rate limit exceeded`;
       }
-      
-      throw new McpError(
-        ErrorCode.InternalError,
-        errorMessage
-      );
+
+      throw new McpError(ErrorCode.InternalError, errorMessage);
     }
 
     // Parse the response JSON
