@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import packageJson from '../package.json' with { type: 'json' };
 import {
   CallToolRequest,
   CallToolRequestSchema,
@@ -79,7 +80,7 @@ const serverCapabilities: ServerCapabilities = {
 // Create server
 const server = new Server({
   name: "gitlab-mcp-server",
-  version: "0.1.0",
+  version: packageJson.version,
 }, {
   capabilities: serverCapabilities
 });
