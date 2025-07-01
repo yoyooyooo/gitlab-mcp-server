@@ -56,7 +56,7 @@ export const GitLabUserSchema = z.object({
   name: z.string(),
   username: z.string(),
   avatar_url: z.string().optional(),
-  web_url: z.string().optional()
+  web_url: z.string().optional(),
 });
 
 export type GitLabUser = z.infer<typeof GitLabUserSchema>;
@@ -75,7 +75,7 @@ export const GitLabRepositorySchema = z.object({
   forks_count: z.number().optional(),
   star_count: z.number().optional(),
   created_at: z.string(),
-  last_activity_at: z.string()
+  last_activity_at: z.string(),
 });
 
 export type GitLabRepository = z.infer<typeof GitLabRepositorySchema>;
@@ -92,7 +92,7 @@ export const GitLabReferenceSchema = z.object({
     short_id: z.string(),
     title: z.string(),
     created_at: z.string(),
-    parent_ids: z.array(z.string()).optional()
+    parent_ids: z.array(z.string()).optional(),
   }),
   merged: z.boolean().optional(),
   protected: z.boolean(),
@@ -100,7 +100,7 @@ export const GitLabReferenceSchema = z.object({
   developers_can_merge: z.boolean().optional(),
   can_push: z.boolean().optional(),
   default: z.boolean().optional(),
-  web_url: z.string().optional()
+  web_url: z.string().optional(),
 });
 
 export type GitLabReference = z.infer<typeof GitLabReferenceSchema>;
@@ -116,7 +116,7 @@ export const GitLabContentSchema = z.object({
   ref: z.string(),
   blob_id: z.string(),
   commit_id: z.string(),
-  last_commit_id: z.string().optional()
+  last_commit_id: z.string().optional(),
 });
 
 export type GitLabContent = z.infer<typeof GitLabContentSchema>;
@@ -126,7 +126,7 @@ export const GitLabCreateUpdateFileResponseSchema = z.object({
   file_path: z.string(),
   branch: z.string(),
   commit_id: z.string(),
-  content: z.any().optional()
+  content: z.any().optional(),
 });
 
 export type GitLabCreateUpdateFileResponse = z.infer<typeof GitLabCreateUpdateFileResponseSchema>;
@@ -134,7 +134,7 @@ export type GitLabCreateUpdateFileResponse = z.infer<typeof GitLabCreateUpdateFi
 // GitLab Search Response
 export const GitLabSearchResponseSchema = z.object({
   count: z.number(),
-  items: z.array(GitLabRepositorySchema)
+  items: z.array(GitLabRepositorySchema),
 });
 
 export type GitLabSearchResponse = z.infer<typeof GitLabSearchResponseSchema>;
@@ -142,7 +142,7 @@ export type GitLabSearchResponse = z.infer<typeof GitLabSearchResponseSchema>;
 // GitLab Group Projects Response
 export const GitLabGroupProjectsResponseSchema = z.object({
   count: z.number(),
-  items: z.array(GitLabRepositorySchema)
+  items: z.array(GitLabRepositorySchema),
 });
 
 export type GitLabGroupProjectsResponse = z.infer<typeof GitLabGroupProjectsResponseSchema>;
@@ -153,7 +153,7 @@ export const GitLabTreeSchema = z.object({
   name: z.string(),
   type: z.enum(['tree', 'blob']),
   path: z.string(),
-  mode: z.string()
+  mode: z.string(),
 });
 
 export type GitLabTree = z.infer<typeof GitLabTreeSchema>;
@@ -173,11 +173,13 @@ export const GitLabCommitSchema = z.object({
   message: z.string(),
   parent_ids: z.array(z.string()).optional(),
   web_url: z.string(),
-  stats: z.object({
-    additions: z.number(),
-    deletions: z.number(),
-    total: z.number()
-  }).optional()
+  stats: z
+    .object({
+      additions: z.number(),
+      deletions: z.number(),
+      total: z.number(),
+    })
+    .optional(),
 });
 
 export type GitLabCommit = z.infer<typeof GitLabCommitSchema>;
@@ -185,7 +187,7 @@ export type GitLabCommit = z.infer<typeof GitLabCommitSchema>;
 // GitLab Commits Response
 export const GitLabCommitsResponseSchema = z.object({
   count: z.number(),
-  items: z.array(GitLabCommitSchema)
+  items: z.array(GitLabCommitSchema),
 });
 
 export type GitLabCommitsResponse = z.infer<typeof GitLabCommitsResponseSchema>;
@@ -203,19 +205,22 @@ export const GitLabIssueSchema = z.object({
   closed_at: z.string().nullable(),
   closed_by: GitLabUserSchema.nullable().optional(),
   labels: z.array(z.union([z.string(), z.object({ name: z.string() })])),
-  milestone: z.object({
-    id: z.number(),
-    iid: z.number(),
-    project_id: z.number(),
-    title: z.string(),
-    description: z.string().nullable(),
-    state: z.string(),
-    created_at: z.string(),
-    updated_at: z.string(),
-    due_date: z.string().nullable(),
-    start_date: z.string().nullable(),
-    web_url: z.string()
-  }).nullable().optional(),
+  milestone: z
+    .object({
+      id: z.number(),
+      iid: z.number(),
+      project_id: z.number(),
+      title: z.string(),
+      description: z.string().nullable(),
+      state: z.string(),
+      created_at: z.string(),
+      updated_at: z.string(),
+      due_date: z.string().nullable(),
+      start_date: z.string().nullable(),
+      web_url: z.string(),
+    })
+    .nullable()
+    .optional(),
   assignees: z.array(GitLabUserSchema),
   author: GitLabUserSchema,
   user_notes_count: z.number().optional(),
@@ -223,7 +228,7 @@ export const GitLabIssueSchema = z.object({
   downvotes: z.number().optional(),
   due_date: z.string().nullable().optional(),
   confidential: z.boolean().optional(),
-  web_url: z.string()
+  web_url: z.string(),
 });
 
 export type GitLabIssue = z.infer<typeof GitLabIssueSchema>;
@@ -231,7 +236,7 @@ export type GitLabIssue = z.infer<typeof GitLabIssueSchema>;
 // GitLab Issues Response
 export const GitLabIssuesResponseSchema = z.object({
   count: z.number(),
-  items: z.array(GitLabIssueSchema)
+  items: z.array(GitLabIssueSchema),
 });
 
 export type GitLabIssuesResponse = z.infer<typeof GitLabIssuesResponseSchema>;
@@ -249,17 +254,20 @@ export const GitLabMergeRequestSchema = z.object({
   assignees: z.array(GitLabUserSchema),
   source_branch: z.string(),
   target_branch: z.string(),
-  diff_refs: z.object({
-    base_sha: z.string(),
-    head_sha: z.string(),
-    start_sha: z.string()
-  }).nullable().optional(),
+  diff_refs: z
+    .object({
+      base_sha: z.string(),
+      head_sha: z.string(),
+      start_sha: z.string(),
+    })
+    .nullable()
+    .optional(),
   web_url: z.string(),
   created_at: z.string(),
   updated_at: z.string(),
   merged_at: z.string().nullable().optional(),
   closed_at: z.string().nullable().optional(),
-  merge_commit_sha: z.string().nullable().optional()
+  merge_commit_sha: z.string().nullable().optional(),
 });
 
 export type GitLabMergeRequest = z.infer<typeof GitLabMergeRequestSchema>;
@@ -267,7 +275,7 @@ export type GitLabMergeRequest = z.infer<typeof GitLabMergeRequestSchema>;
 // GitLab Merge Requests Response
 export const GitLabMergeRequestsResponseSchema = z.object({
   count: z.number(),
-  items: z.array(GitLabMergeRequestSchema)
+  items: z.array(GitLabMergeRequestSchema),
 });
 
 export type GitLabMergeRequestsResponse = z.infer<typeof GitLabMergeRequestsResponseSchema>;
@@ -282,29 +290,35 @@ export const GitLabEventSchema = z.object({
   target_title: z.string().nullable().optional(),
   author: GitLabUserSchema,
   created_at: z.string(),
-  note: z.object({
-    id: z.number(),
-    body: z.string(),
-    attachment: z.any().nullable(),
-    author: GitLabUserSchema,
-    created_at: z.string(),
-    updated_at: z.string(),
-    system: z.boolean(),
-    noteable_id: z.number(),
-    noteable_type: z.string(),
-    resolvable: z.boolean().optional(),
-    confidential: z.boolean().optional(),
-    url: z.string().optional()
-  }).nullable().optional(),
-  push_data: z.object({
-    commit_count: z.number().optional(),
-    action: z.string().optional(),
-    ref: z.string().optional(),
-    ref_type: z.string().optional(),
-    commit_from: z.string().nullable().optional(),
-    commit_to: z.string().nullable().optional(),
-    commit_title: z.string().nullable().optional()
-  }).nullable().optional()
+  note: z
+    .object({
+      id: z.number(),
+      body: z.string(),
+      attachment: z.any().nullable(),
+      author: GitLabUserSchema,
+      created_at: z.string(),
+      updated_at: z.string(),
+      system: z.boolean(),
+      noteable_id: z.number(),
+      noteable_type: z.string(),
+      resolvable: z.boolean().optional(),
+      confidential: z.boolean().optional(),
+      url: z.string().optional(),
+    })
+    .nullable()
+    .optional(),
+  push_data: z
+    .object({
+      commit_count: z.number().optional(),
+      action: z.string().optional(),
+      ref: z.string().optional(),
+      ref_type: z.string().optional(),
+      commit_from: z.string().nullable().optional(),
+      commit_to: z.string().nullable().optional(),
+      commit_title: z.string().nullable().optional(),
+    })
+    .nullable()
+    .optional(),
 });
 
 export type GitLabEvent = z.infer<typeof GitLabEventSchema>;
@@ -312,7 +326,7 @@ export type GitLabEvent = z.infer<typeof GitLabEventSchema>;
 // GitLab Events Response
 export const GitLabEventsResponseSchema = z.object({
   count: z.number(),
-  items: z.array(GitLabEventSchema)
+  items: z.array(GitLabEventSchema),
 });
 
 export type GitLabEventsResponse = z.infer<typeof GitLabEventsResponseSchema>;
@@ -326,7 +340,7 @@ export const GitLabWikiPageSchema = z.object({
   encoding: z.string().optional(),
   web_url: z.string().optional(),
   created_at: z.string().optional(),
-  updated_at: z.string().optional()
+  updated_at: z.string().optional(),
 });
 
 export type GitLabWikiPage = z.infer<typeof GitLabWikiPageSchema>;
@@ -334,7 +348,7 @@ export type GitLabWikiPage = z.infer<typeof GitLabWikiPageSchema>;
 // GitLab Wiki Pages Response
 export const GitLabWikiPagesResponseSchema = z.object({
   count: z.number(),
-  items: z.array(GitLabWikiPageSchema)
+  items: z.array(GitLabWikiPageSchema),
 });
 
 export type GitLabWikiPagesResponse = z.infer<typeof GitLabWikiPagesResponseSchema>;
@@ -345,7 +359,7 @@ export const GitLabWikiAttachmentSchema = z.object({
   file_path: z.string(),
   branch: z.string(),
   commit_id: z.string(),
-  url: z.string().optional()
+  url: z.string().optional(),
 });
 
 export type GitLabWikiAttachment = z.infer<typeof GitLabWikiAttachmentSchema>;
@@ -353,7 +367,7 @@ export type GitLabWikiAttachment = z.infer<typeof GitLabWikiAttachmentSchema>;
 // File Operation
 export const FileOperationSchema = z.object({
   path: z.string(),
-  content: z.string()
+  content: z.string(),
 });
 
 export type FileOperation = z.infer<typeof FileOperationSchema>;
@@ -363,12 +377,12 @@ export const CreateRepositoryOptionsSchema = z.object({
   name: z.string(),
   description: z.string().optional(),
   visibility: z.enum(['private', 'internal', 'public']).default('private'),
-  initialize_with_readme: z.boolean().default(true)
+  initialize_with_readme: z.boolean().default(true),
 });
 
 export const CreateBranchOptionsSchema = z.object({
   name: z.string(),
-  ref: z.string().optional()
+  ref: z.string().optional(),
 });
 
 export const CreateIssueOptionsSchema = z.object({
@@ -376,7 +390,7 @@ export const CreateIssueOptionsSchema = z.object({
   description: z.string().optional(),
   assignee_ids: z.array(z.number()).optional(),
   milestone_id: z.number().optional(),
-  labels: z.array(z.string()).optional()
+  labels: z.array(z.string()).optional(),
 });
 
 export const CreateMergeRequestOptionsSchema = z.object({
@@ -385,7 +399,7 @@ export const CreateMergeRequestOptionsSchema = z.object({
   source_branch: z.string(),
   target_branch: z.string(),
   allow_collaboration: z.boolean().optional(),
-  draft: z.boolean().optional()
+  draft: z.boolean().optional(),
 });
 
 // Tool Schemas
@@ -395,13 +409,13 @@ export const CreateOrUpdateFileSchema = z.object({
   content: z.string(),
   commit_message: z.string(),
   branch: z.string(),
-  previous_path: z.string().optional()
+  previous_path: z.string().optional(),
 });
 
 export const SearchRepositoriesSchema = z.object({
   search: z.string(),
   page: z.number().optional(),
-  per_page: z.number().optional()
+  per_page: z.number().optional(),
 });
 
 export const CreateRepositorySchema = CreateRepositoryOptionsSchema;
@@ -409,33 +423,37 @@ export const CreateRepositorySchema = CreateRepositoryOptionsSchema;
 export const GetFileContentsSchema = z.object({
   project_id: z.string(),
   file_path: z.string(),
-  ref: z.string()
+  ref: z.string(),
 });
 
 export const PushFilesSchema = z.object({
   project_id: z.string(),
   files: z.array(FileOperationSchema),
   commit_message: z.string(),
-  branch: z.string()
+  branch: z.string(),
 });
 
-export const CreateIssueSchema = z.object({
-  project_id: z.string()
-}).merge(CreateIssueOptionsSchema);
+export const CreateIssueSchema = z
+  .object({
+    project_id: z.string(),
+  })
+  .merge(CreateIssueOptionsSchema);
 
-export const CreateMergeRequestSchema = z.object({
-  project_id: z.string()
-}).merge(CreateMergeRequestOptionsSchema);
+export const CreateMergeRequestSchema = z
+  .object({
+    project_id: z.string(),
+  })
+  .merge(CreateMergeRequestOptionsSchema);
 
 export const ForkRepositorySchema = z.object({
   project_id: z.string(),
-  namespace: z.string().optional()
+  namespace: z.string().optional(),
 });
 
 export const CreateBranchSchema = z.object({
   project_id: z.string(),
   branch: z.string(),
-  ref: z.string().optional()
+  ref: z.string().optional(),
 });
 
 export const ListGroupProjectsSchema = z.object({
@@ -448,7 +466,7 @@ export const ListGroupProjectsSchema = z.object({
   simple: z.boolean().optional(),
   include_subgroups: z.boolean().optional(),
   page: z.number().optional(),
-  per_page: z.number().optional()
+  per_page: z.number().optional(),
 });
 
 export const GetProjectEventsSchema = z.object({
@@ -459,7 +477,7 @@ export const GetProjectEventsSchema = z.object({
   after: z.string().optional(),
   sort: z.enum(['asc', 'desc']).optional(),
   page: z.number().optional(),
-  per_page: z.number().optional()
+  per_page: z.number().optional(),
 });
 
 export const ListCommitsSchema = z.object({
@@ -472,7 +490,7 @@ export const ListCommitsSchema = z.object({
   with_stats: z.boolean().optional(),
   first_parent: z.boolean().optional(),
   page: z.number().optional(),
-  per_page: z.number().optional()
+  per_page: z.number().optional(),
 });
 
 export const ListIssuesSchema = z.object({
@@ -492,7 +510,7 @@ export const ListIssuesSchema = z.object({
   order_by: z.string().optional(),
   sort: z.enum(['asc', 'desc']).optional(),
   page: z.number().optional(),
-  per_page: z.number().optional()
+  per_page: z.number().optional(),
 });
 
 export const ListMergeRequestsSchema = z.object({
@@ -514,27 +532,27 @@ export const ListMergeRequestsSchema = z.object({
   target_branch: z.string().optional(),
   wip: z.enum(['yes', 'no']).optional(),
   page: z.number().optional(),
-  per_page: z.number().optional()
+  per_page: z.number().optional(),
 });
 
 // Wiki Tool Input Schemas
 export const ListProjectWikiPagesSchema = z.object({
   project_id: z.string(),
-  with_content: z.boolean().optional()
+  with_content: z.boolean().optional(),
 });
 
 export const GetProjectWikiPageSchema = z.object({
   project_id: z.string(),
   slug: z.string(),
   render_html: z.boolean().optional(),
-  version: z.string().optional()
+  version: z.string().optional(),
 });
 
 export const CreateProjectWikiPageSchema = z.object({
   project_id: z.string(),
   title: z.string(),
   content: z.string(),
-  format: WikiPageFormatEnum.optional()
+  format: WikiPageFormatEnum.optional(),
 });
 
 export const EditProjectWikiPageSchema = z.object({
@@ -542,38 +560,38 @@ export const EditProjectWikiPageSchema = z.object({
   slug: z.string(),
   title: z.string().optional(),
   content: z.string().optional(),
-  format: WikiPageFormatEnum.optional()
+  format: WikiPageFormatEnum.optional(),
 });
 
 export const DeleteProjectWikiPageSchema = z.object({
   project_id: z.string(),
-  slug: z.string()
+  slug: z.string(),
 });
 
 export const UploadProjectWikiAttachmentSchema = z.object({
   project_id: z.string(),
   file_path: z.string(),
   content: z.string(),
-  branch: z.string().optional()
+  branch: z.string().optional(),
 });
 
 export const ListGroupWikiPagesSchema = z.object({
   group_id: z.string(),
-  with_content: z.boolean().optional()
+  with_content: z.boolean().optional(),
 });
 
 export const GetGroupWikiPageSchema = z.object({
   group_id: z.string(),
   slug: z.string(),
   render_html: z.boolean().optional(),
-  version: z.string().optional()
+  version: z.string().optional(),
 });
 
 export const CreateGroupWikiPageSchema = z.object({
   group_id: z.string(),
   title: z.string(),
   content: z.string(),
-  format: WikiPageFormatEnum.optional()
+  format: WikiPageFormatEnum.optional(),
 });
 
 export const EditGroupWikiPageSchema = z.object({
@@ -581,19 +599,19 @@ export const EditGroupWikiPageSchema = z.object({
   slug: z.string(),
   title: z.string().optional(),
   content: z.string().optional(),
-  format: WikiPageFormatEnum.optional()
+  format: WikiPageFormatEnum.optional(),
 });
 
 export const DeleteGroupWikiPageSchema = z.object({
   group_id: z.string(),
-  slug: z.string()
+  slug: z.string(),
 });
 
 export const UploadGroupWikiAttachmentSchema = z.object({
   group_id: z.string(),
   file_path: z.string(),
   content: z.string(),
-  branch: z.string().optional()
+  branch: z.string().optional(),
 });
 
 export const ListProjectMembersSchema = z.object({
@@ -627,7 +645,7 @@ export type GitLabMember = z.infer<typeof GitLabMemberSchema>;
 // GitLab Member Response
 export const GitLabMembersResponseSchema = z.object({
   count: z.number(),
-  items: z.array(GitLabMemberSchema)
+  items: z.array(GitLabMemberSchema),
 });
 
 export type GitLabMembersResponse = z.infer<typeof GitLabMembersResponseSchema>;
@@ -636,8 +654,8 @@ export type GitLabMembersResponse = z.infer<typeof GitLabMembersResponseSchema>;
 export const ListIssueNotesSchema = z.object({
   project_id: z.string(),
   issue_iid: z.number(),
-  sort: z.enum(["asc", "desc"]).optional(),
-  order_by: z.enum(["created_at", "updated_at"]).optional(),
+  sort: z.enum(['asc', 'desc']).optional(),
+  order_by: z.enum(['created_at', 'updated_at']).optional(),
   page: z.number().optional(),
   per_page: z.number().optional(),
 });
@@ -647,4 +665,76 @@ export const ListIssueDiscussionsSchema = z.object({
   issue_iid: z.number(),
   page: z.number().optional(),
   per_page: z.number().optional(),
+});
+
+// Merge Request Details Tool Input Schema
+export const GetMergeRequestDetailsSchema = z.object({
+  project_id: z.union([z.number(), z.string()]).describe('The project ID of the merge request'),
+  merge_request_iid: z.number().describe('The internal ID of the merge request within the project'),
+  verbose: z
+    .boolean()
+    .default(false)
+    .describe(
+      'By default a filtered version is returned, suitable for most cases. Only set true if more information is needed.'
+    ),
+});
+
+// List Open Merge Requests Tool Input Schema
+export const ListOpenMergeRequestsSchema = z.object({
+  project_id: z.union([z.number(), z.string()]).describe('The project ID of the merge request'),
+  verbose: z
+    .boolean()
+    .default(false)
+    .describe(
+      'By default a filtered version is returned, suitable for most cases. Only set true if more information is needed.'
+    ),
+});
+
+// Get Merge Request Comments Tool Input Schema
+export const GetMergeRequestCommentsSchema = z.object({
+  project_id: z.union([z.number(), z.string()]).describe('The project ID of the merge request'),
+  merge_request_iid: z.number().describe('The internal ID of the merge request within the project'),
+  verbose: z
+    .boolean()
+    .default(false)
+    .describe(
+      'By default a filtered version is returned, suitable for most cases. Only set true if more information is needed.'
+    ),
+});
+
+// Add Merge Request Comment Tool Input Schema
+export const AddMergeRequestCommentSchema = z.object({
+  project_id: z.union([z.number(), z.string()]).describe('The project ID of the merge request'),
+  merge_request_iid: z.number().describe('The internal ID of the merge request within the project'),
+  comment: z.string().describe('The comment text'),
+});
+
+// Add Merge Request Diff Comment Tool Input Schema
+export const AddMergeRequestDiffCommentSchema = z.object({
+  project_id: z.union([z.number(), z.string()]).describe('The project ID of the merge request'),
+  merge_request_iid: z.number().describe('The internal ID of the merge request within the project'),
+  comment: z.string().describe('The comment text'),
+  base_sha: z.string().describe('The SHA of the base commit'),
+  start_sha: z.string().describe('The SHA of the start commit'),
+  head_sha: z.string().describe('The SHA of the head commit'),
+  file_path: z.string().describe('The path to the file being commented on'),
+  line_number: z.union([z.number(), z.string()]).describe('The line number in the new version of the file'),
+});
+
+// Get Merge Request Diff Tool Input Schema
+export const GetMergeRequestDiffSchema = z.object({
+  project_id: z.union([z.number(), z.string()]).describe('The project ID of the merge request'),
+  merge_request_iid: z.number().describe('The internal ID of the merge request within the project'),
+});
+
+// Get Issue Details Tool Input Schema
+export const GetIssueDetailsSchema = z.object({
+  project_id: z.union([z.number(), z.string()]).describe('The project ID of the issue'),
+  issue_iid: z.number().describe('The internal ID of the issue within the project'),
+  verbose: z
+    .boolean()
+    .default(false)
+    .describe(
+      'By default a filtered version is returned, suitable for most cases. Only set true if more information is needed.'
+    ),
 });

@@ -43,6 +43,13 @@ import {
   FileOperationSchema,
   ListIssueNotesSchema,
   ListIssueDiscussionsSchema,
+  GetMergeRequestDetailsSchema,
+  ListOpenMergeRequestsSchema,
+  GetMergeRequestCommentsSchema,
+  AddMergeRequestCommentSchema,
+  AddMergeRequestDiffCommentSchema,
+  GetMergeRequestDiffSchema,
+  GetIssueDetailsSchema,
 } from './schemas.js';
 import { GitLabApi } from './gitlab-api.js';
 import { setupTransport } from './transport.js';
@@ -289,6 +296,48 @@ const ALL_TOOLS = [
     inputSchema: createJsonSchema(ListIssueDiscussionsSchema),
     readOnly: true
   },
+  {
+    name: "get_merge_request_details",
+    description: "Get details about a specific merge request of a project like title, source-branch, target-branch, web_url, ...",
+    inputSchema: createJsonSchema(GetMergeRequestDetailsSchema),
+    readOnly: true
+  },
+  {
+    name: "list_open_merge_requests",
+    description: "Lists all open merge requests in the project",
+    inputSchema: createJsonSchema(ListOpenMergeRequestsSchema),
+    readOnly: true
+  },
+  {
+    name: "get_merge_request_comments",
+    description: "Get general and file diff comments of a certain merge request",
+    inputSchema: createJsonSchema(GetMergeRequestCommentsSchema),
+    readOnly: true
+  },
+  {
+    name: "add_merge_request_comment",
+    description: "Add a general comment to a merge request",
+    inputSchema: createJsonSchema(AddMergeRequestCommentSchema),
+    readOnly: false
+  },
+  {
+    name: "add_merge_request_diff_comment",
+    description: "Add a comment of a merge request at a specific line in a file diff",
+    inputSchema: createJsonSchema(AddMergeRequestDiffCommentSchema),
+    readOnly: false
+  },
+  {
+    name: "get_merge_request_diff",
+    description: "Get the file diffs of a certain merge request",
+    inputSchema: createJsonSchema(GetMergeRequestDiffSchema),
+    readOnly: true
+  },
+  {
+    name: "get_issue_details",
+    description: "Get details of an issue within a certain project",
+    inputSchema: createJsonSchema(GetIssueDetailsSchema),
+    readOnly: true
+  },
 ];
 
 // Register tool handlers
@@ -378,7 +427,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
         const args = PushFilesSchema.parse(request.params.arguments);
 
         // Use individual file creation for each file instead of batch commit
-        const results = [];
+        const results: any[] = [];
         for (const file of args.files) {
           try {
             const result = await gitlabApi.createOrUpdateFile(
@@ -738,6 +787,145 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
 
         // Format and return the response
         return formatDiscussionsResponse(discussions);
+      }
+
+      case "get_merge_request_details": {
+        // Parse and validate the arguments
+        const args = GetMergeRequestDetailsSchema.parse(request.params.arguments);
+
+        // Call the API function to get the merge request details
+        const mergeRequest = await gitlabApi.getMergeRequestDetails(args.project_id, args.merge_request_iid);
+
+        // Filter the merge request data if verbose is not enabled
+        const result = args.verbose ? mergeRequest : {
+          title: mergeRequest.title,
+          description: mergeRequest.description,
+          state: mergeRequest.state,
+          web_url: mergeRequest.web_url,
+          target_branch: mergeRequest.target_branch,
+          source_branch: mergeRequest.source_branch,
+          merge_status: 'can_be_merged', // Note: Adding this field for compatibility
+          detailed_merge_status: 'mergeable', // Note: Adding this field for compatibility
+          diff_refs: mergeRequest.diff_refs,
+        };
+
+        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+      }
+
+      case "list_open_merge_requests": {
+        const args = ListOpenMergeRequestsSchema.parse(request.params.arguments);
+        const mergeRequests = await gitlabApi.listOpenMergeRequests(args.project_id);
+
+        // Filter the merge requests data if verbose is not enabled
+        const result = args.verbose ? mergeRequests : {
+          count: mergeRequests.count,
+          items: mergeRequests.items.map(mr => ({
+            iid: mr.iid,
+            project_id: mr.project_id,
+            title: mr.title,
+            description: mr.description,
+            state: mr.state,
+            web_url: mr.web_url,
+          }))
+        };
+
+        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+      }
+
+      case "get_merge_request_comments": {
+        const args = GetMergeRequestCommentsSchema.parse(request.params.arguments);
+        const discussions = await gitlabApi.getMergeRequestComments(args.project_id, args.merge_request_iid);
+
+        if (args.verbose) {
+          return { content: [{ type: "text", text: JSON.stringify(discussions, null, 2) }] };
+        }
+
+        // Filter the discussions to get notes and convert to simple format
+        const allNotes = discussions.items.flatMap(discussion => discussion.notes || []);
+
+        // Separate discussion notes and diff notes based on type
+        const discussionNotes = allNotes
+          .filter(note => note.type !== 'DiffNote')
+          .map(note => ({
+            id: note.id,
+            body: note.body,
+            author_name: note.author?.name,
+          }));
+
+        const diffNotes = allNotes
+          .filter(note => note.type === 'DiffNote')
+          .map(note => ({
+            id: note.id,
+            body: note.body,
+            author_name: note.author?.name,
+            // Position info might be in custom fields depending on implementation
+          }));
+
+        return {
+          content: [{
+            type: "text",
+            text: JSON.stringify({ discussionNotes, diffNotes }, null, 2)
+          }]
+        };
+      }
+
+      case "add_merge_request_comment": {
+        const args = AddMergeRequestCommentSchema.parse(request.params.arguments);
+        const result = await gitlabApi.addMergeRequestComment(
+          args.project_id,
+          args.merge_request_iid,
+          args.comment
+        );
+
+        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+      }
+
+      case "add_merge_request_diff_comment": {
+        const args = AddMergeRequestDiffCommentSchema.parse(request.params.arguments);
+        const result = await gitlabApi.addMergeRequestDiffComment(
+          args.project_id,
+          args.merge_request_iid,
+          {
+            comment: args.comment,
+            base_sha: args.base_sha,
+            start_sha: args.start_sha,
+            head_sha: args.head_sha,
+            file_path: args.file_path,
+            line_number: args.line_number
+          }
+        );
+
+        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+      }
+
+      case "get_merge_request_diff": {
+        const args = GetMergeRequestDiffSchema.parse(request.params.arguments);
+        const diff = await gitlabApi.getMergeRequestDiff(args.project_id, args.merge_request_iid);
+
+        const diffText = Array.isArray(diff) && diff.length > 0
+          ? JSON.stringify(diff, null, 2)
+          : "No diff data available for this merge request.";
+
+        return { content: [{ type: "text", text: diffText }] };
+      }
+
+      case "get_issue_details": {
+        const args = GetIssueDetailsSchema.parse(request.params.arguments);
+        const issue = await gitlabApi.getIssueDetails(args.project_id, args.issue_iid);
+
+        const filteredIssue = args.verbose ? issue : {
+          title: issue.title,
+          description: issue.description,
+          state: issue.state,
+          created_at: issue.created_at,
+          updated_at: issue.updated_at,
+          closed_at: issue.closed_at,
+          author: issue.author,
+          assignees: issue.assignees,
+          web_url: issue.web_url,
+        };
+
+        return { content: [{ type: "text", text: JSON.stringify(filteredIssue, null, 2) }] };
       }
 
       default:
