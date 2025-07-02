@@ -725,6 +725,8 @@ export const AddMergeRequestDiffCommentSchema = z.object({
 export const GetMergeRequestDiffSchema = z.object({
   project_id: z.union([z.number(), z.string()]).describe('The project ID of the merge request'),
   merge_request_iid: z.number().describe('The internal ID of the merge request within the project'),
+  page: z.number().optional(),
+  per_page: z.number().optional(),
 });
 
 // Get Issue Details Tool Input Schema

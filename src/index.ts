@@ -900,7 +900,17 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
 
       case "get_merge_request_diff": {
         const args = GetMergeRequestDiffSchema.parse(request.params.arguments);
-        const diff = await gitlabApi.getMergeRequestDiff(args.project_id, args.merge_request_iid);
+
+        // Additional validation for pagination parameters
+        if (args.per_page && (args.per_page < 1 || args.per_page > 100)) {
+          throw new Error("per_page must be between 1 and 100");
+        }
+
+        if (args.page && args.page < 1) {
+          throw new Error("page must be greater than 0");
+        }
+        const { project_id, merge_request_iid: mergeRequestIid, ...options } = args;
+        const diff = await gitlabApi.getMergeRequestDiff(args.project_id, { mergeRequestIid, ...options });
 
         const diffText = Array.isArray(diff) && diff.length > 0
           ? JSON.stringify(diff, null, 2)

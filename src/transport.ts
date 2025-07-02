@@ -12,7 +12,7 @@ export interface TransportOptions {
    * Port to use for SSE transport (default: 3000)
    */
   port?: number;
-  
+
   /**
    * Whether to use SSE transport (default: false, uses stdio)
    */
@@ -55,10 +55,10 @@ export async function setupTransport(
         if (req.method === 'GET' && pathname === '/sse') {
           // Create a new SSE transport
           const transport = new SSEServerTransport("/messages", res);
-          
+
           // Store the transport by session ID
           transports[transport.sessionId] = transport;
-          
+
           // Set up cleanup handler
           req.on("close", () => {
             delete transports[transport.sessionId];
@@ -70,7 +70,7 @@ export async function setupTransport(
         else if (req.method === 'POST' && pathname === '/messages') {
           const sessionId = query.sessionId as string;
           const transport = transports[sessionId];
-          
+
           if (!transport) {
             res.writeHead(400);
             res.end('No transport found for sessionId');
