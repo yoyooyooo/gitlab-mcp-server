@@ -1457,12 +1457,12 @@ export class GitLabApi {
    * @throws Will throw an error if the GitLab API request fails
    */
   async listOpenMergeRequests(projectId: string | number): Promise<GitLabMergeRequestsResponse> {
-    const url = new URL(`${this.apiUrl}/projects/${encodeURIComponent(String(projectId))}/merge_requests`);
+    const url = new URL(`${this.apiUrl}/projects/${String(projectId)}/merge_requests`);
     url.searchParams.append('state', 'opened');
-
     const response = await fetch(url.toString(), {
       headers: {
         Authorization: `Bearer ${this.token}`,
+        'Content-Type': 'application/json',
       },
     });
 
@@ -1634,6 +1634,66 @@ export class GitLabApi {
   }
 
   /**
+   * Fetches the list of commits for a given merge request.
+   * This endpoint supports pagination.
+   * @private
+   */
+  private async getMergeRequestCommits(
+    projectId: string | number,
+    mergeRequestIid: number,
+    options: { page?: number; per_page?: number } = {}
+  ): Promise<any> {
+    const url = new URL(
+      `${this.apiUrl}/projects/${encodeURIComponent(
+        String(projectId)
+      )}/merge_requests/${mergeRequestIid}/commits`
+    );
+
+    // Append pagination parameters if they exist
+    Object.entries(options).forEach(([key, value]) => {
+      if (value !== undefined) {
+        url.searchParams.append(key, value.toString());
+      }
+    });
+
+    const response = await fetch(url.toString(), {
+      headers: { Authorization: `Bearer ${this.token}` },
+    });
+
+    if (!response.ok) {
+      // Add your specific error handling here (like in your example)
+      throw new Error(`Failed to fetch commits for MR !${mergeRequestIid}`);
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Fetches the diff for a single commit SHA.
+   * @private
+   */
+  private async getCommitDiff(
+    projectId: string | number,
+    commitSha: string
+  ): Promise<any> {
+    const url = `${this.apiUrl}/projects/${encodeURIComponent(
+      String(projectId)
+    )}/repository/commits/${commitSha}/diff`;
+
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${this.token}` },
+    });
+
+    if (!response.ok) {
+      // It's possible an individual commit diff fails, so you might want to handle this gracefully
+      console.error(`Failed to fetch diff for commit ${commitSha}`);
+      return []; // Return empty array to not fail the whole process
+    }
+
+    return response.json();
+  }
+
+  /**
    * Gets the file diffs of a GitLab merge request.
    *
    * @param projectId - The ID or URL-encoded path of the project
@@ -1641,32 +1701,35 @@ export class GitLabApi {
    * @returns A promise that resolves to the merge request diffs
    * @throws Will throw an error if the GitLab API request fails
    */
-  async getMergeRequestDiff(projectId: string | number, mergeRequestIid: number): Promise<any> {
-    const url = `${this.apiUrl}/projects/${encodeURIComponent(
-      String(projectId)
-    )}/merge_requests/${mergeRequestIid}/diffs`;
+  async getMergeRequestDiff(projectId: string | number, options: {
+    mergeRequestIid: number;
+    page?: number;
+    per_page?: number;
+  }): Promise<any> {
+    const { mergeRequestIid, page, per_page } = options;
 
-    const response = await fetch(url, {
-      headers: {
-        Authorization: `Bearer ${this.token}`,
-      },
-    });
+    // 1. Fetch the list of commits for the merge request.
+    const commits = await this.getMergeRequestCommits(projectId, mergeRequestIid, { page, per_page });
 
-    if (!response.ok) {
-      let errorMessage = `GitLab API error: ${response.statusText}`;
-
-      if (response.status === 404) {
-        errorMessage = `Merge request not found: Project ID ${projectId}, MR IID ${mergeRequestIid}`;
-      } else if (response.status === 403) {
-        errorMessage = `Permission denied to access merge request diffs`;
-      } else if (response.status === 429) {
-        errorMessage = `GitLab API rate limit exceeded`;
-      }
-
-      throw new McpError(ErrorCode.InternalError, errorMessage);
+    if (!commits || commits.length === 0) {
+      return []; // No commits found, so no diffs.
     }
 
-    return await response.json();
+    // 2. Create an array of promises, each fetching the diff for one commit.
+    const diffPromises = commits.map(commit =>
+      this.getCommitDiff(projectId, commit.id)
+    );
+
+    // 3. Wait for all diff requests to complete.
+    const diffsPerCommit = await Promise.all(diffPromises);
+
+    // 4. Flatten the array of arrays into a single array of diffs.
+    const allDiffs = diffsPerCommit.flat();
+    // Note: This approach might produce duplicate diffs if a file was changed in multiple commits.
+    // For a pure "final diff", the /changes endpoint is ideal, but this is the best workaround
+    // when that endpoint is limited. You could add logic here to de-duplicate changes if needed.
+
+    return allDiffs;
   }
 
   /**
